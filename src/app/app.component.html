@@ -4,11 +4,6 @@
   <img src="assets/ajax-loader.gif" />
 </div>
 <div *ngIf="!busy && filesFound && filesFound.length > 0" class="container">
-  <h1>
-    Welcome to {{ title }}!
-  </h1>
-  <!-- <button (click)="launchWindow()">Launch My Site</button>
-  <img src="file:///C:/backup/pictures/1b16.jpg" alt=""> -->
   <div class="row">
     <div class="col">
         <a class="link" (click)="currentIndex === 0 ? currentIndex = filesFound.length - 1 : currentIndex = currentIndex - 1">Back</a>
@@ -21,12 +16,16 @@
     </div>
   </div>
   <div class="row">
-    {{(currentIndex + 1)}}. File Path: {{filesFound[currentIndex]}}
+    <div class="col">
+      (index={{(currentIndex + 1)}}) File Path: {{filesFound[currentIndex]}}
+    </div>
   </div>
-  <ol>
-      <li *ngFor="let file of filesFound; let idx = index">
-        <a class="link" (click)="currentIndex = idx">{{file}}</a>
-      </li>
-  </ol>
+  <div class="row scrollableDiv">
+    <ol>
+        <li *ngFor="let file of filesFound; let idx = index">
+          <a class="link" (click)="currentIndex = idx">{{file}}</a>
+        </li>
+    </ol>
+  </div>
 </div>
 <router-outlet></router-outlet>
