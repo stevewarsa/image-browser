@@ -7,6 +7,17 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script>
+    // the following is needed to make sure that JQuery gets loaded before bootstrap. 
+    // for some reason, even though I'm loading the scripts in the proper order
+    // in angular.json, I was still getting uncaught type error 'fn' of undefined 
+    // $.fn.emulateTransitionEnd = transitionEndEmulator in bootstrap
+    // I found this solution in answer #2 at
+    //  https://stackoverflow.com/questions/32621988/electron-jquery-is-not-defined
+    if ( typeof module === "object" && typeof module.exports === "object" ) {
+      window.$ = window.jQuery = require('jquery');
+    }
+  </script>
 </head>
 <body>
   <img-root></img-root>

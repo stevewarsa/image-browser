@@ -1,9 +1,32 @@
-<!--The content below is only a placeholder and can be replaced.-->
-<div style="text-align:center">
+<div *ngIf="busy" class="container">
+  {{busyMessage}}<br>
+  Processing {{currentFile}}...
+  <img src="assets/ajax-loader.gif" />
+</div>
+<div *ngIf="!busy && filesFound && filesFound.length > 0" class="container">
   <h1>
     Welcome to {{ title }}!
   </h1>
-  <button (click)="launchWindow()">Launch My Site</button>
-  <img src="file:///C:/backup/pictures/1b16.jpg" alt="">
+  <!-- <button (click)="launchWindow()">Launch My Site</button>
+  <img src="file:///C:/backup/pictures/1b16.jpg" alt=""> -->
+  <div class="row">
+    <div class="col">
+        <a class="link" (click)="currentIndex === 0 ? currentIndex = filesFound.length - 1 : currentIndex = currentIndex - 1">Back</a>
+    </div>
+    <div class="col">
+      <img style="max-width: 100%; max-height: 300px;" src="file:///{{filesFound[currentIndex]}}">
+    </div>
+    <div class="col">
+        <a class="link" (click)="currentIndex === (filesFound.length - 1) ? currentIndex = 0 : currentIndex = currentIndex + 1">Next</a>
+    </div>
+  </div>
+  <div class="row">
+    {{(currentIndex + 1)}}. File Path: {{filesFound[currentIndex]}}
+  </div>
+  <ol>
+      <li *ngFor="let file of filesFound; let idx = index">
+        <a class="link" (click)="currentIndex = idx">{{file}}</a>
+      </li>
+  </ol>
 </div>
 <router-outlet></router-outlet>

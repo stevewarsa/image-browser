@@ -1,40 +1,40 @@
-import { Component } from '@angular/core';
-import { ElectronService } from 'ngx-electron';
+import { Component, OnInit } from '@angular/core';
+import { FileService } from './file.service';
 
 @Component({
   selector: 'img-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = "Image Browser";
-  fs = null;
+  filesFound: string[] = [];
+  busy: boolean = true;
+  busyMessage: string = null;
+  currentFile: string = null;
+  currentIndex: number = 0;
 
-  constructor(private electronService: ElectronService) {
-    this.fs = this.electronService.remote.require('fs');
-  }
+  constructor(private fileService: FileService) { }
 
-  launchWindow() {
-    //this.electronService.shell.openExternal("http://ps11911.com");
-    //this.electronService.remote.dialog.showOpenDialog({});
+  ngOnInit() {
+    this.busy = true;
+    this.busyMessage = "Retrieving all the images ...";
     let dirPath = "C:/backup/pictures";
-    this.fs.readdir(dirPath, (err, dir) => {
-      for (let i = 0; i < dir.length; i++) {
-          let fileName = dir[i];
-          let filePath = dirPath + "/" + fileName;
-          let stat = this.fs.statSync(filePath);
-          if (stat.isFile()) {
-            console.log("File: " + filePath);
-            // this.fs.readFile(filePath, 'utf8', (err,data) => {
-            //     if (err) {
-            //         console.log(err);
-            //     }
-            //     console.log("C: "+ fileName);
-            // });
-          } else {
-            console.log("Directory: " + filePath);
-          }
+    this.fileService.getFiles(dirPath).then((files: string[]) => {
+      this.filesFound = files;
+      for (let i = 0; i < this.filesFound.length; i++) {
+        let file = this.filesFound[i];
+        //console.log("File found: " + file);
+        if (i % 10 == 0) {
+          console.log("Updating UI with file found: " + file);
+          this.currentFile = file;
+          this.busyMessage = "Processing file " + (i + 1) + " of " + this.filesFound.length + " files...";
+        // setTimeout(() => {
+        //   }, 100);
+        }
       }
+      this.busy = false;
+      this.busyMessage = null;
     });
   }
 }
