@@ -19,6 +19,7 @@ function createWindow() {
         slashes: true
     }));
     win.webContents.openDevTools();
+    win.maximize();
     win.on("closed", function () {
         win = null;
     });

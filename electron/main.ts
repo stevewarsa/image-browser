@@ -25,6 +25,7 @@ function createWindow() {
   );
 
   win.webContents.openDevTools();
+  win.maximize();
 
   win.on("closed", () => {
     win = null;
