@@ -66,7 +66,19 @@ export class AppComponent implements OnInit {
     this.scroll(this.currentIndex);
   }
 
-  scroll(id) {
+  copyImageToClipboard() {
+    this.fileService.copyImageToClipboard(this.filesFound[this.currentIndex]).then((response: string) => {
+      console.log("Response from copying image: " + response);
+    });
+  }
+
+  openImageInApp() {
+    this.fileService.openImageInApp(this.filesFound[this.currentIndex]).then((response: string) => {
+      console.log("Response from opening image: " + response);
+    });
+  }
+
+  private scroll(id) {
     console.log(`scrolling to ${id}`);
     let el = document.getElementById(id);
     if (el) {

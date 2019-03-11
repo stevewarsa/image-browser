@@ -27,4 +27,22 @@ export class FileService {
       this.ipc.send("getFiles", dirPath);
     });
   }
+
+  async copyImageToClipboard(imagePath: string) {
+    return new Promise<string>((resolve, reject) => {
+      this.ipc.once("copyImageToClipboardResponse", (event, arg) => {
+        resolve(arg);
+      });
+      this.ipc.send("copyImageToClipboard", imagePath);
+    });
+  }
+
+  async openImageInApp(imagePath: string) {
+    return new Promise<string>((resolve, reject) => {
+      this.ipc.once("openImageInAppResponse", (event, arg) => {
+        resolve(arg);
+      });
+      this.ipc.send("openImageInApp", imagePath);
+    });
+  }
 }

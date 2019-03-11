@@ -29,6 +29,14 @@ electron_1.ipcMain.on("getFiles", function (event, arg) {
     getFiles(arg, files);
     win.webContents.send("getFilesResponse", files);
 });
+electron_1.ipcMain.on("copyImageToClipboard", function (event, arg) {
+    copyImageToClipboard(arg);
+    win.webContents.send("copyImageToClipboardResponse", "Image successfully copied!");
+});
+electron_1.ipcMain.on("openImageInApp", function (event, arg) {
+    electron_1.shell.openItem(arg);
+    win.webContents.send("openImageInAppResponse", "Image successfully opened!");
+});
 function getFiles(path, filesArrayToFill) {
     console.log("Getting files for path: " + path + "...");
     fs.readdirSync(path).forEach(function (file) {
@@ -40,5 +48,14 @@ function getFiles(path, filesArrayToFill) {
             filesArrayToFill.push(path + '/' + file);
         }
     });
+}
+function copyImageToClipboard(imagePath) {
+    console.log("Attempting to copy image " + imagePath + " to clipboard...");
+    var image = electron_1.nativeImage.createFromPath(imagePath);
+    console.log("The following is the native image created from path:");
+    console.log(image);
+    console.log("Now writing image to clipboard...");
+    electron_1.clipboard.writeImage(image);
+    console.log("Image has been written to clipboard");
 }
 //# sourceMappingURL=main.js.map
