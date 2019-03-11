@@ -2,10 +2,10 @@
 .link {
     cursor: pointer; 
     text-decoration: underline !important;
-    color: blue;
+    color: blue !important;
  }
 
  .scrollableDiv {
-    height:300px;
+    height:100px;
     overflow-y: scroll;
   }

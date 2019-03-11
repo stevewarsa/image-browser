@@ -1,18 +1,25 @@
-<div *ngIf="busy" class="container">
+<div *ngIf="busy" class="container m-3">
   {{busyMessage}}<br>
-  Processing {{currentFile}}...
   <img src="assets/ajax-loader.gif" />
 </div>
 <div *ngIf="!busy && filesFound && filesFound.length > 0" class="container">
-  <div class="row">
-    <div class="col">
-        <a class="link" (click)="currentIndex === 0 ? currentIndex = filesFound.length - 1 : currentIndex = currentIndex - 1">Back</a>
+    <div class="row mb-3">
+      <div class="col">
+        <button class="btn btn-primary" (click)="prev()">Prev</button>
+      </div>
+      <div class="col">
+        <button class="btn btn-primary" (click)="back()">Back</button>
+      </div>
+      <div class="col">
+        <button class="btn btn-primary" (click)="doRandom()">Random</button>
+      </div>
+      <div class="col">
+        <button class="btn btn-primary" (click)="next()">Next</button>
+      </div>
     </div>
+    <div class="row">
     <div class="col">
-      <img style="max-width: 100%; max-height: 300px;" src="file:///{{filesFound[currentIndex]}}">
-    </div>
-    <div class="col">
-        <a class="link" (click)="currentIndex === (filesFound.length - 1) ? currentIndex = 0 : currentIndex = currentIndex + 1">Next</a>
+      <img style="max-width: 100%; min-height: 600px; max-height: 600px;" src="file:///{{filesFound[currentIndex]}}">
     </div>
   </div>
   <div class="row">
@@ -21,9 +28,9 @@
     </div>
   </div>
   <div class="row scrollableDiv">
-    <ol>
+    <ol class="m-3">
         <li *ngFor="let file of filesFound; let idx = index">
-          <a class="link" (click)="currentIndex = idx">{{file}}</a>
+          <a id="{{idx}}" class="link" (click)="currentIndex = idx">{{file}}</a>
         </li>
     </ol>
   </div>
