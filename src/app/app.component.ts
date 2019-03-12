@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FileService } from './file.service';
+import { ImageData } from './image-data';
+import { DatabaseService } from './database.service';
 
 @Component({
   selector: 'img-root',
@@ -15,8 +17,9 @@ export class AppComponent implements OnInit {
   currentIndex: number = 0;
   lastIndexes: number[] = [0];
   currentLastViewedIndexInLastIndexes: number = 0;
+  currentMetaData: ImageData = null;
 
-  constructor(private fileService: FileService) { }
+  constructor(private fileService: FileService, private databaseService: DatabaseService) { }
 
   ngOnInit() {
     this.busy = true;
@@ -41,6 +44,7 @@ export class AppComponent implements OnInit {
     this.lastIndexes.push(this.currentIndex);
     this.currentLastViewedIndexInLastIndexes = this.lastIndexes.length - 1;
     this.currentIndex = randNum;
+    this.getCurrentImageMetaData();
     this.scroll(this.currentIndex);
   }
 
@@ -48,6 +52,7 @@ export class AppComponent implements OnInit {
     this.lastIndexes.push(this.currentIndex);
     this.currentLastViewedIndexInLastIndexes = this.lastIndexes.length - 1;
     this.currentIndex === (this.filesFound.length - 1) ? this.currentIndex = 0 : this.currentIndex = this.currentIndex + 1;
+    this.getCurrentImageMetaData();
     this.scroll(this.currentIndex);
   }
 
@@ -56,6 +61,7 @@ export class AppComponent implements OnInit {
     if (this.currentLastViewedIndexInLastIndexes > 0) {
       this.currentLastViewedIndexInLastIndexes -= 1;
     }
+    this.getCurrentImageMetaData();
     this.scroll(this.currentIndex);
   }
 
@@ -63,7 +69,16 @@ export class AppComponent implements OnInit {
     this.lastIndexes.push(this.currentIndex);
     this.currentLastViewedIndexInLastIndexes = this.lastIndexes.length - 1;
     this.currentIndex === 0 ? this.currentIndex = this.filesFound.length - 1 : this.currentIndex = this.currentIndex - 1;
+    this.getCurrentImageMetaData();
     this.scroll(this.currentIndex);
+  }
+
+  private getCurrentImageMetaData() {
+    console.log("Calling databaseService.getImageMetaData for file " + this.filesFound[this.currentIndex]);
+    this.fileService.getImageMetaData(this.filesFound[this.currentIndex]).then((imageData: ImageData) => {
+      console.log("Got image metadata back for path:" + this.filesFound[this.currentIndex]);
+      this.currentMetaData = imageData;
+    })
   }
 
   copyImageToClipboard() {
