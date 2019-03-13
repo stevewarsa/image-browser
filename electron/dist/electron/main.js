@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var image_data_1 = require("./../src/app/image-data");
 var electron_1 = require("electron");
 var path = require("path");
 var url = require("url");
@@ -14,7 +13,7 @@ electron_1.app.on("activate", function () {
     }
 });
 function createWindow() {
-    win = new electron_1.BrowserWindow({ width: 1200, height: 900 });
+    win = new electron_1.BrowserWindow();
     win.loadURL(url.format({
         pathname: path.join(__dirname, "/../../dist/image-browser/index.html"),
         protocol: "file:",
@@ -39,9 +38,10 @@ electron_1.ipcMain.on("openImageInApp", function (event, arg) {
     electron_1.shell.openItem(arg);
     win.webContents.send("openImageInAppResponse", "Image successfully opened!");
 });
-electron_1.ipcMain.on("getImageMetaData", function (event, arg) {
-    console.log("Received 'getImageMetaData' message in main.ts with arg: " + arg + "...");
-    win.webContents.send("getImageMetaDataResponse", getImageMetaData(arg));
+electron_1.ipcMain.on("imageDataLookup", function (event, arg) {
+    var imageData = {};
+    getImageMetaData(arg, imageData);
+    win.webContents.send("getImageMetaDataResponse", imageData);
 });
 function getFiles(path, filesArrayToFill) {
     console.log("Getting files for path: " + path + "...");
@@ -64,7 +64,8 @@ function copyImageToClipboard(imagePath) {
     electron_1.clipboard.writeImage(image);
     console.log("Image has been written to clipboard");
 }
-function getImageMetaData(imagePath) {
+function getImageMetaData(imagePath, imageData) {
+    console.log("Received 'imageDataLookup' message in main.ts with arg: " + imagePath + "...");
     var connection = mysql.createConnection({
         host: 'localhost',
         user: 'devuser',
@@ -81,7 +82,6 @@ function getImageMetaData(imagePath) {
     });
     // Perform a query
     var query = "select id, file_name, file_path from image_data where full_path = ?";
-    var imageData = new image_data_1.ImageData();
     connection.query(query, [imagePath], function (err, rows, fields) {
         if (err) {
             console.log("An error ocurred performing the query.");
@@ -97,6 +97,5 @@ function getImageMetaData(imagePath) {
     connection.end(function () {
         // The connection has been closed
     });
-    return imageData;
 }
 //# sourceMappingURL=main.js.map

@@ -1,4 +1,3 @@
-import { ImageData } from './../src/app/image-data';
 import { app, BrowserWindow, ipcMain, nativeImage, clipboard, shell } from "electron";
 import * as path from "path";
 import * as url from "url";
@@ -16,7 +15,7 @@ app.on("activate", () => {
 });
 
 function createWindow() {
-  win = new BrowserWindow({ width: 1200, height: 900 });
+  win = new BrowserWindow();
 
   win.loadURL(
     url.format({
@@ -34,38 +33,33 @@ function createWindow() {
   });
 }
 
+ipcMain.on("openImageInApp", (event, arg) => {
+  shell.openItem(arg);
+  win.webContents.send("openImageInAppResponse", "Image successfully opened!");
+});
+
 ipcMain.on("getFiles", (event, arg) => {
   let files: string[] = [];
   getFiles(arg, files);
   win.webContents.send("getFilesResponse", files);
 });
 
+function getFiles(path: string, filesArrayToFill: string[]) {
+  console.log("Getting files for path: " + path + "...");
+  fs.readdirSync(path).forEach(file => {
+      var subpath = path + '/' + file;
+      if (fs.lstatSync(subpath).isDirectory()){
+          getFiles(subpath, filesArrayToFill);
+      } else {
+          filesArrayToFill.push(path + '/' + file);
+      }
+  });
+}
+
 ipcMain.on("copyImageToClipboard", (event, arg) => {
   copyImageToClipboard(arg);
   win.webContents.send("copyImageToClipboardResponse", "Image successfully copied!");
 });
-
-ipcMain.on("openImageInApp", (event, arg) => {
-  shell.openItem(arg);
-  win.webContents.send("openImageInAppResponse", "Image successfully opened!");
-});
-
-ipcMain.on("getImageMetaData", (event, arg) => {
-  console.log("Received 'getImageMetaData' message in main.ts with arg: " + arg + "...");
-  win.webContents.send("getImageMetaDataResponse", getImageMetaData(arg));
-});
-
-function getFiles(path: string, filesArrayToFill: string[]) {
-    console.log("Getting files for path: " + path + "...");
-    fs.readdirSync(path).forEach(file => {
-        var subpath = path + '/' + file;
-        if (fs.lstatSync(subpath).isDirectory()){
-            getFiles(subpath, filesArrayToFill);
-        } else {
-            filesArrayToFill.push(path + '/' + file);
-        }
-    });
-}
 
 function copyImageToClipboard(imagePath: string) {
   console.log("Attempting to copy image " + imagePath + " to clipboard...");
@@ -77,8 +71,13 @@ function copyImageToClipboard(imagePath: string) {
   console.log("Image has been written to clipboard");
 }
 
-function getImageMetaData(imagePath: string): ImageData {
-  var connection = mysql.createConnection({
+ipcMain.on("imageDataLookup", (event, arg) => {
+  win.webContents.send("imageDataLookupResponse", getImageMetaData(arg));
+});
+
+function getImageMetaData(imagePath) {
+  console.log("Received 'imageDataLookup' message in main.ts with arg: " + imagePath + "...");
+  let connection = mysql.createConnection({
     host     : 'localhost',
     user     : 'devuser',
     password : 'Galatians2v20',
@@ -88,14 +87,13 @@ function getImageMetaData(imagePath: string): ImageData {
   connection.connect(err => {
     // in case of error
     if (err) {
-        console.log(err.code);
-        console.log(err.fatal);
+      console.log(err.code);
+      console.log(err.fatal);
     }
   });
-
+  let imageData = {};
   // Perform a query
   let query = "select id, file_name, file_path from image_data where full_path = ?";
-  let imageData: ImageData = new ImageData();
   connection.query(query, [imagePath], (err, rows, fields) => {
     if (err) {
         console.log("An error ocurred performing the query.");
@@ -104,7 +102,17 @@ function getImageMetaData(imagePath: string): ImageData {
     }
 
     console.log("Query succesfully executed here are the values:");
-    console.log(rows);
+    //console.log(rows);
+    for (let row of rows) {
+      console.log(row['id']);
+      console.log(row['file_path']);
+      console.log(row['file_name']);
+      imageData['id'] = row['id'];
+      imageData['fullPath'] = row['file_path'] + row['file_name'];
+      imageData['fileName'] = row['file_name'];
+      imageData['filePath'] = row['file_path'];
+      break;
+    }
     console.log("Here are the fields:");
     console.log(fields);
   });

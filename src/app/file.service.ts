@@ -49,11 +49,11 @@ export class FileService {
 
   async getImageMetaData(imagePath: string) {
     return new Promise<ImageData>((resolve, reject) => {
-      this.ipc.once("getImageMetaDataResponse", (event, arg) => {
+      this.ipc.once("imageDataLookupResponse", (event, arg) => {
         resolve(arg);
       });
-      console.log("Sending message to main 'getImageMetaData' with arg " + imagePath);
-      this.ipc.send("getImageMetaData", imagePath);
+      console.log("Sending message to main 'imageDataLookup' with arg " + imagePath);
+      this.ipc.send("imageDataLookup", imagePath);
     });
   }
 }

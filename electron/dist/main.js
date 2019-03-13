@@ -4,6 +4,7 @@ var electron_1 = require("electron");
 var path = require("path");
 var url = require("url");
 var fs = require("fs");
+var mysql = require("mysql");
 var win;
 electron_1.app.on("ready", createWindow);
 electron_1.app.on("activate", function () {
@@ -12,7 +13,7 @@ electron_1.app.on("activate", function () {
     }
 });
 function createWindow() {
-    win = new electron_1.BrowserWindow({ width: 1200, height: 900 });
+    win = new electron_1.BrowserWindow();
     win.loadURL(url.format({
         pathname: path.join(__dirname, "/../../dist/image-browser/index.html"),
         protocol: "file:",
@@ -24,18 +25,14 @@ function createWindow() {
         win = null;
     });
 }
+electron_1.ipcMain.on("openImageInApp", function (event, arg) {
+    electron_1.shell.openItem(arg);
+    win.webContents.send("openImageInAppResponse", "Image successfully opened!");
+});
 electron_1.ipcMain.on("getFiles", function (event, arg) {
     var files = [];
     getFiles(arg, files);
     win.webContents.send("getFilesResponse", files);
-});
-electron_1.ipcMain.on("copyImageToClipboard", function (event, arg) {
-    copyImageToClipboard(arg);
-    win.webContents.send("copyImageToClipboardResponse", "Image successfully copied!");
-});
-electron_1.ipcMain.on("openImageInApp", function (event, arg) {
-    electron_1.shell.openItem(arg);
-    win.webContents.send("openImageInAppResponse", "Image successfully opened!");
 });
 function getFiles(path, filesArrayToFill) {
     console.log("Getting files for path: " + path + "...");
@@ -49,6 +46,10 @@ function getFiles(path, filesArrayToFill) {
         }
     });
 }
+electron_1.ipcMain.on("copyImageToClipboard", function (event, arg) {
+    copyImageToClipboard(arg);
+    win.webContents.send("copyImageToClipboardResponse", "Image successfully copied!");
+});
 function copyImageToClipboard(imagePath) {
     console.log("Attempting to copy image " + imagePath + " to clipboard...");
     var image = electron_1.nativeImage.createFromPath(imagePath);
@@ -57,5 +58,55 @@ function copyImageToClipboard(imagePath) {
     console.log("Now writing image to clipboard...");
     electron_1.clipboard.writeImage(image);
     console.log("Image has been written to clipboard");
+}
+electron_1.ipcMain.on("imageDataLookup", function (event, arg) {
+    win.webContents.send("imageDataLookupResponse", getImageMetaData(arg));
+});
+function getImageMetaData(imagePath) {
+    console.log("Received 'imageDataLookup' message in main.ts with arg: " + imagePath + "...");
+    var connection = mysql.createConnection({
+        host: 'localhost',
+        user: 'devuser',
+        password: 'Galatians2v20',
+        database: 'image-meta-data'
+    });
+    // connect to mysql
+    connection.connect(function (err) {
+        // in case of error
+        if (err) {
+            console.log(err.code);
+            console.log(err.fatal);
+        }
+    });
+    var imageData = {};
+    // Perform a query
+    var query = "select id, file_name, file_path from image_data where full_path = ?";
+    connection.query(query, [imagePath], function (err, rows, fields) {
+        if (err) {
+            console.log("An error ocurred performing the query.");
+            console.log(err);
+            return;
+        }
+        console.log("Query succesfully executed here are the values:");
+        //console.log(rows);
+        for (var _i = 0, rows_1 = rows; _i < rows_1.length; _i++) {
+            var row = rows_1[_i];
+            console.log(row['id']);
+            console.log(row['file_path']);
+            console.log(row['file_name']);
+            imageData['id'] = row['id'];
+            imageData['fullPath'] = row['file_path'] + row['file_name'];
+            imageData['fileName'] = row['file_name'];
+            imageData['filePath'] = row['file_path'];
+            break;
+        }
+        console.log("Here are the fields:");
+        console.log(fields);
+    });
+    // Close the connection
+    connection.end(function () {
+        // The connection has been closed
+    });
+    return imageData;
 }
 //# sourceMappingURL=main.js.map

@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FileService } from './file.service';
 import { ImageData } from './image-data';
-import { DatabaseService } from './database.service';
 
 @Component({
   selector: 'img-root',
@@ -19,7 +18,7 @@ export class AppComponent implements OnInit {
   currentLastViewedIndexInLastIndexes: number = 0;
   currentMetaData: ImageData = null;
 
-  constructor(private fileService: FileService, private databaseService: DatabaseService) { }
+  constructor(private fileService: FileService) { }
 
   ngOnInit() {
     this.busy = true;
@@ -74,10 +73,11 @@ export class AppComponent implements OnInit {
   }
 
   private getCurrentImageMetaData() {
-    console.log("Calling databaseService.getImageMetaData for file " + this.filesFound[this.currentIndex]);
+    console.log("Calling fileService.getImageMetaData for file " + this.filesFound[this.currentIndex]);
     this.fileService.getImageMetaData(this.filesFound[this.currentIndex]).then((imageData: ImageData) => {
       console.log("Got image metadata back for path:" + this.filesFound[this.currentIndex]);
       this.currentMetaData = imageData;
+      console.log(this.currentMetaData);
     })
   }
 
@@ -94,8 +94,8 @@ export class AppComponent implements OnInit {
   }
 
   private scroll(id) {
-    console.log(`scrolling to ${id}`);
-    let el = document.getElementById(id);
+    console.log(`scrolling to ${id + 1}`);
+    let el = document.getElementById(id + 1);
     if (el) {
       el.scrollIntoView();
     }
