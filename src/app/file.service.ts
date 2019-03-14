@@ -56,4 +56,14 @@ export class FileService {
       this.ipc.send("imageDataLookup", imagePath);
     });
   }
+
+  async addTagToImage(imagePath: string, tagName: string) {
+    return new Promise<ImageData>((resolve, reject) => {
+      this.ipc.once("addTagToImageResponse", (event, arg) => {
+        resolve(arg);
+      });
+      console.log("Sending message to main 'imageDataLookup' with arg " + imagePath);
+      this.ipc.send("addTagToImage", {img: imagePath, tag: tagName});
+    });
+  }
 }

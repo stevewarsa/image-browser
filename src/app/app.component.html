@@ -7,16 +7,39 @@
     <div class="btn-group mr-3" role="group" aria-label="Historical Back">
         <button type="button" class="btn btn-secondary" (click)="back()">Last Viewed</button>
     </div>
-    <div class="btn-group mr-2" role="group" aria-label="Primary Navigation">
+    <div class="btn-group mr-3" role="group" aria-label="Primary Navigation">
       <button type="button" class="btn btn-danger m-1" (click)="prev()"><i class="fa fa-arrow-circle-left"></i> Prev</button>
       <button type="button" class="btn btn-success m-1" (click)="doRandom()"><i class="fa fa-random"></i> Random</button>
       <button type="button" class="btn btn-danger m-1" (click)="next()"><i class="fa fa-arrow-circle-right"></i> Next</button>
     </div>
     <div class="btn-group mr-3" role="group" aria-label="Other commands">
-        <button type="button" class="btn btn-primary m-1" (click)="copyImageToClipboard()"><i class="fa fa-clipboard"></i> Copy Image</button>
-        <button type="button" class="btn btn-primary m-1" (click)="openImageInApp()"><i class="fa fa-open"></i> Open Image</button>
+      <button type="button" class="btn btn-primary m-1" (click)="copyImageToClipboard()"><i class="fa fa-clipboard"></i> Copy Image</button>
+      <button type="button" class="btn btn-primary m-1" (click)="openImageInApp()"><i class="fa fa-open"></i> Open Image</button>
+      <button [hidden]="showForm" (click)="viewForm()" type="button" class="btn btn-secondary m-1"><i class="fa fa-plus-square"></i> Show Tag Form</button>
+      <button [hidden]="!showForm" (click)="showForm = false" type="button" class="btn btn-secondary m-1"><i class="fa fa-minus-square-o"></i> Hide Tag Form</button>
     </div>
   </div>
+  <form [hidden]="!showForm" class="mr-3 mb-2">
+    <div class="form-group">
+      <label class="mr-2" for="newtag">New Tag:</label>
+      <input type="text" class="form-control" id="newtag" name="newtag" [(ngModel)]="newTag">
+    </div>
+    <div class="form-group">
+      <label class="mr-2" for="existingtag">Existing Tag:</label>
+      <select class="form-control" id="existingtag" name="existingtag">
+        <option *ngFor="let tag of tags" value="{{tag.id}}">{{tag.tagName}}</option>
+      </select>
+    </div>
+    <!-- <div class="form-group mr-3">
+      <label class="mr-2" for="title">Title:</label>
+      <input #titleInput type="text" class="form-control" id="title" name="title" [(ngModel)]="todoToAdd.title">
+    </div>
+    <div class="form-group mr-3">
+        <label class="mr-2" for="desc">Description:</label>
+        <textarea class="form-control" name="desc" id="desc" name="desc" cols="20" rows="4" [(ngModel)]="todoToAdd.description"></textarea>
+      </div> -->
+    <button type="button" (click)="addTag()" class="btn btn-primary">Add Tag</button>
+  </form>
   <div class="row">
     <div class="col">
       <img style="max-width: 100%; min-height: 600px; max-height: 600px;" src="file:///{{filesFound[currentIndex]}}">

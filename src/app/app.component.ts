@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FileService } from './file.service';
 import { ImageData } from './image-data';
+import { Tag } from './tag';
 
 @Component({
   selector: 'img-root',
@@ -17,7 +18,9 @@ export class AppComponent implements OnInit {
   lastIndexes: number[] = [0];
   currentLastViewedIndexInLastIndexes: number = 0;
   currentMetaData: ImageData = null;
-
+  showForm: boolean = false;
+  newTag: string = null;
+  tags: Tag[] = [];
   constructor(private fileService: FileService) { }
 
   ngOnInit() {
@@ -91,6 +94,20 @@ export class AppComponent implements OnInit {
     this.fileService.openImageInApp(this.filesFound[this.currentIndex]).then((response: string) => {
       console.log("Response from opening image: " + response);
     });
+  }
+
+  viewForm() {
+    this.showForm = true;
+    this.newTag = null;
+    // this.todoToAdd.title = null;
+    // this.todoToAdd.category = "Default";
+    // this.todoToAdd.description = null;
+    // setTimeout(() => {
+    //   this.titleInput.nativeElement.focus();
+    // }, 100);
+  }
+
+  addTag() {
   }
 
   private scroll(id) {

@@ -25,6 +25,8 @@ function createWindow() {
     })
   );
 
+  win.setMenu(null);
+
   win.webContents.openDevTools();
   win.maximize();
 
@@ -72,8 +74,29 @@ function copyImageToClipboard(imagePath: string) {
 }
 
 ipcMain.on("imageDataLookup", (event, arg) => {
-  win.webContents.send("imageDataLookupResponse", getImageMetaData(arg));
+  getImageMetaData(arg);
 });
+
+function getImageMetaDataCallBack(err, rows) {
+  if (err) {
+    win.webContents.send("imageDataLookupResponse", "Error with query: " + err);
+  } else {
+    let imageData = null;
+    for (let row of rows) {
+      console.log(row['id']);
+      console.log(row['file_path']);
+      console.log(row['file_name']);
+      imageData = {
+        id: row['id'],
+        fullPath: row['file_path'] + row['file_name'],
+        fileName: row['file_name'],
+        filePath: row['file_path']
+      };
+      break;
+    }
+    win.webContents.send("imageDataLookupResponse", imageData);
+  }
+}
 
 function getImageMetaData(imagePath) {
   console.log("Received 'imageDataLookup' message in main.ts with arg: " + imagePath + "...");
@@ -91,34 +114,32 @@ function getImageMetaData(imagePath) {
       console.log(err.fatal);
     }
   });
-  let imageData = {};
   // Perform a query
   let query = "select id, file_name, file_path from image_data where full_path = ?";
   connection.query(query, [imagePath], (err, rows, fields) => {
     if (err) {
         console.log("An error ocurred performing the query.");
         console.log(err);
-        return;
+        getImageMetaDataCallBack(err, null);
+    } else {
+      getImageMetaDataCallBack(null, rows);
     }
 
-    console.log("Query succesfully executed here are the values:");
-    //console.log(rows);
-    for (let row of rows) {
-      console.log(row['id']);
-      console.log(row['file_path']);
-      console.log(row['file_name']);
-      imageData['id'] = row['id'];
-      imageData['fullPath'] = row['file_path'] + row['file_name'];
-      imageData['fileName'] = row['file_name'];
-      imageData['filePath'] = row['file_path'];
-      break;
-    }
-    console.log("Here are the fields:");
-    console.log(fields);
+    // console.log("Here are the fields:");
+    // console.log(fields);
   });
   // Close the connection
   connection.end(() => {
     // The connection has been closed
   });
-  return imageData;
+}
+
+ipcMain.on("addTagToImage", (event, arg) => {
+  // the arg is expected to contain the full image path and the tag name
+  // if the tag name does not exist, then a new tag will be added
+  win.webContents.send("addTagToImageResponse", addTagToImage(arg));
+});
+
+function addTagToImage(tagParam: any) {
+  console.log(tagParam);
 }
