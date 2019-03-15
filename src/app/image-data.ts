@@ -1,7 +1,7 @@
 import { Tag } from './tag';
 
 export class ImageData {
-    id: number = -1;
+    public id: number = -1;
     fullPath: string = null;
     fileName: string = null;
     filePath: string = null;

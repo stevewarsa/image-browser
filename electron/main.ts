@@ -2,9 +2,18 @@ import { app, BrowserWindow, ipcMain, nativeImage, clipboard, shell } from "elec
 import * as path from "path";
 import * as url from "url";
 import * as fs from "fs";
-import * as mysql from "mysql";
+import { Database } from "./database";
+import { ImageData } from './../src/app/image-data';
 
 let win: BrowserWindow;
+
+let executeDb = (callback) => {
+  const database = new Database();
+  return callback(database).then(
+      result => database.close().then( () => result ),
+      err => database.close().then( () => { throw err; } )
+  );
+};
 
 app.on("ready", createWindow);
 
@@ -77,60 +86,27 @@ ipcMain.on("imageDataLookup", (event, arg) => {
   getImageMetaData(arg);
 });
 
-function getImageMetaDataCallBack(err, rows) {
-  if (err) {
-    win.webContents.send("imageDataLookupResponse", "Error with query: " + err);
-  } else {
-    let imageData = null;
-    for (let row of rows) {
+function getImageMetaData(imagePath) {
+  console.log("Received 'imageDataLookup' message in main.ts with arg: " + imagePath + "...");
+  let someRows = [];
+  let query = "select id, file_name, file_path from image_data where full_path = ?";
+  executeDb(database => database.query(query, [imagePath]).then(rows => someRows)).then(() => {
+    let imageData: ImageData = null;
+    for (let row of someRows) {
       console.log(row['id']);
       console.log(row['file_path']);
       console.log(row['file_name']);
-      imageData = {
-        id: row['id'],
-        fullPath: row['file_path'] + row['file_name'],
-        fileName: row['file_name'],
-        filePath: row['file_path']
-      };
+      imageData = new ImageData();
+      imageData.id = row['id'];
+      imageData.fullPath = row['file_path'] + row['file_name'];
+      imageData.fileName = row['file_name'];
+      imageData.filePath = row['file_path'];
       break;
     }
     win.webContents.send("imageDataLookupResponse", imageData);
-  }
-}
-
-function getImageMetaData(imagePath) {
-  console.log("Received 'imageDataLookup' message in main.ts with arg: " + imagePath + "...");
-  let connection = mysql.createConnection({
-    host     : 'localhost',
-    user     : 'devuser',
-    password : 'Galatians2v20',
-    database : 'image-meta-data'
-  });
-  // connect to mysql
-  connection.connect(err => {
-    // in case of error
-    if (err) {
-      console.log(err.code);
-      console.log(err.fatal);
-    }
-  });
-  // Perform a query
-  let query = "select id, file_name, file_path from image_data where full_path = ?";
-  connection.query(query, [imagePath], (err, rows, fields) => {
-    if (err) {
-        console.log("An error ocurred performing the query.");
-        console.log(err);
-        getImageMetaDataCallBack(err, null);
-    } else {
-      getImageMetaDataCallBack(null, rows);
-    }
-
-    // console.log("Here are the fields:");
-    // console.log(fields);
-  });
-  // Close the connection
-  connection.end(() => {
-    // The connection has been closed
+  }).catch( err => {
+    // handle the error
+    win.webContents.send("imageDataLookupResponse", "Error with query: " + err);
   });
 }
 
@@ -142,4 +118,19 @@ ipcMain.on("addTagToImage", (event, arg) => {
 
 function addTagToImage(tagParam: any) {
   console.log(tagParam);
+  let tag: string = tagParam.tag;
+  let imagePath: string = tagParam.img;
+  let someRows;
+  let query: string = "select id from tag where tag_nm = ?";
+  executeDb(database => database.query(query, [tag]).then(rows => someRows)).then(() => {
+    if (someRows && someRows.length > 0) {
+      // this tag already exists, don't insert it
+    } else {
+      // this tag does not exist, insert it
+    }
+    win.webContents.send("addTagToImageResponse", null);
+  }).catch( err => {
+    // handle the error
+    win.webContents.send("addTagToImageResponse", "Error with query: " + err);
+  });
 }
