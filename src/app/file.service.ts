@@ -57,13 +57,13 @@ export class FileService {
     });
   }
 
-  async addTagToImage(imagePath: string, tagName: string) {
+  async addTagToImage(imageMetaData: ImageData, tagName: string) {
     return new Promise<ImageData>((resolve, reject) => {
       this.ipc.once("addTagToImageResponse", (event, arg) => {
         resolve(arg);
       });
-      console.log("Sending message to main 'imageDataLookup' with arg " + imagePath);
-      this.ipc.send("addTagToImage", {img: imagePath, tag: tagName});
+      console.log("Sending message to main 'addTagToImage' with image " + imageMetaData.fullPath + " and tag " + tagName + "...");
+      this.ipc.send("addTagToImage", {fullPath: imageMetaData.fullPath, fileName: imageMetaData.fileName, filePath: imageMetaData.filePath, tag: tagName});
     });
   }
 }

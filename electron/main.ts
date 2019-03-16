@@ -10,8 +10,8 @@ let win: BrowserWindow;
 let executeDb = (callback) => {
   const database = new Database();
   return callback(database).then(
-      result => database.close().then( () => result ),
-      err => database.close().then( () => { throw err; } )
+      result => database.close().then(() => result),
+      err => database.close().then(() => { throw err; })
   );
 };
 
@@ -113,24 +113,126 @@ function getImageMetaData(imagePath) {
 ipcMain.on("addTagToImage", (event, arg) => {
   // the arg is expected to contain the full image path and the tag name
   // if the tag name does not exist, then a new tag will be added
-  win.webContents.send("addTagToImageResponse", addTagToImage(arg));
+  addTagToImage(arg);
+  
 });
 
 function addTagToImage(tagParam: any) {
-  console.log(tagParam);
+  console.log("main.addTagToImage starting...");
   let tag: string = tagParam.tag;
-  let imagePath: string = tagParam.img;
-  let someRows;
-  let query: string = "select id from tag where tag_nm = ?";
-  executeDb(database => database.query(query, [tag]).then(rows => someRows)).then(() => {
-    if (someRows && someRows.length > 0) {
-      // this tag already exists, don't insert it
-    } else {
-      // this tag does not exist, insert it
-    }
-    win.webContents.send("addTagToImageResponse", null);
+  let imageFullPath: string = tagParam.fullPath;
+  let imageFileName: string = tagParam.fileName;
+  let imageFilePath: string = tagParam.filePath;
+  let imageQuery: string = "select id from image_data where full_path = ?";
+  let imageInsert: string = "insert into image_data (full_path, file_name, file_path) values(?, ?, ?)";
+  let tagQuery: string = "select id from tag where tag_nm = ?";
+  let tagInsert: string = "insert into tag (tag_nm) values(?)";
+  let imageTagInsert: string = "insert into image_tag (image_id, tag_id) values(?,?)";
+  let tagId = null;
+  let imageId = null;
+  let lastQueryRan = tagQuery;
+  let chainNo: number = 0;
+  console.log("Chain " + chainNo + ": Running tag query for tag '" + tag + "'...");
+  executeDb(
+    database => database.query(tagQuery, [tag])
+      .then(rows => {
+        chainNo += 1;
+        if (!rows || rows.length === 0) {
+          console.log("Chain " + chainNo + ": No results returned for tag '" + tag + "'.  Running tag insert...");
+          lastQueryRan = tagInsert;
+          return database.query(tagInsert, [tag]);
+        } else {
+          tagId = rows[0]['id'];
+          console.log("Chain " + chainNo + ": Tag id '" + tagId + " was found for tag '" + tag + "'.  Running image query...");
+          lastQueryRan = imageQuery;
+          return database.query(imageQuery, [imageFullPath]);
+        }
+      })
+      .then(rows => {
+        chainNo += 1;
+        console.log("Chain " + chainNo + ": Last query ran was '" + lastQueryRan + "'...");
+        if (lastQueryRan === imageQuery) {
+          // that means rows contains the imageQuery results
+          if (!rows || rows.length === 0) {
+            lastQueryRan = imageInsert;
+            console.log("Chain " + chainNo + ": No results returned for image '" + imageFullPath + "'.  Running image insert...");
+            return database.query(imageInsert, [imageFullPath, imageFileName, imageFilePath]);
+          } else {
+            // an image was found, and there is a tagId, so run the imageTagInsert
+            imageId = rows[0]['id'];
+            lastQueryRan = imageTagInsert;
+            console.log("Chain " + chainNo + ": Image id '" + imageId + " was found for image '" + imageFullPath + "'.  Running imageTag insert...");
+            return database.query(imageTagInsert, [imageId, tagId]);
+          }
+        } else if (lastQueryRan === tagInsert) {
+          // this means rows contains the tagInsert results
+          tagId = rows.insertId;
+          console.log("Chain " + chainNo + ": New tag inserted with id '" + tagId + " now running query for image '" + imageFullPath + "'...");
+          // therefore, we need to now run the imageQuery
+          lastQueryRan = imageQuery;
+          return database.query(imageQuery, [imageFullPath]);
+        }
+      })
+      .then(rows => {
+        chainNo += 1;
+        console.log("Chain " + chainNo + ": Last query ran was '" + lastQueryRan + "'...");
+        switch (lastQueryRan) {
+          case imageQuery:
+            // that means rows contains the imageQuery results
+            if (!rows || rows.length === 0) {
+              lastQueryRan = imageInsert;
+              console.log("Chain " + chainNo + ": No results returned for image '" + imageFullPath + "'.  Running image insert...");
+              return database.query(imageInsert, [imageFullPath, imageFileName, imageFilePath]);
+            } else {
+              // an image was found, and there is a tagId, so run the imageTagInsert
+              imageId = rows[0]['id'];
+              lastQueryRan = imageTagInsert;
+              console.log("Chain " + chainNo + ": Image id '" + imageId + " was found for image '" + imageFullPath + "'.  Running imageTag insert...");
+              return database.query(imageTagInsert, [imageId, tagId]);
+            }
+          case imageInsert:
+            imageId = rows.insertId;
+            console.log("Chain " + chainNo + ": New image inserted with id '" + imageId + " now running insert for imageTag with tagId '" + tagId + "'...");
+            lastQueryRan = imageTagInsert;
+            return database.query(imageTagInsert, [imageId, tagId]);
+          case imageTagInsert:
+            // if we're running imageTagInsert, we're done!
+            console.log("Chain " + chainNo + ": ImageTag record inserted with imageId '" + imageId + " and tagId '" + tagId + "', full process complete!");
+            break;
+          default:
+            break;
+        }
+      })
+      .then(rows => {
+        chainNo += 1;
+        console.log("Chain " + chainNo + ": Last query ran was '" + lastQueryRan + "'...");
+        switch (lastQueryRan) {
+          case imageInsert:
+            imageId = rows.insertId;
+            lastQueryRan = imageTagInsert;
+            console.log("Chain " + chainNo + ": New image inserted with id '" + imageId + " now running insert for imageTag with tagId '" + tagId + "'...");
+            return database.query(imageTagInsert, [imageId, tagId]);
+          case imageTagInsert:
+            // if we're running imageTagInsert, we're done!
+            console.log("Chain " + chainNo + ": ImageTag record inserted with imageId '" + imageId + " and tagId '" + tagId + "', full process complete!");
+            break;
+          default:
+            break;
+        }
+      })
+      .then(rows => {
+        chainNo += 1;
+        console.log("Chain " + chainNo + ": Last query ran was '" + lastQueryRan + "'...");
+        // the assumption is that this is the final insert
+        if (lastQueryRan === imageTagInsert) {
+          console.log("Chain " + chainNo + ": ImageTag record inserted with imageId '" + imageId + " and tagId '" + tagId + "', full process complete!");
+        }
+      })
+  ).then( () => {
+      // do something with someRows and otherRows
+      win.webContents.send("addTagToImageResponse", "tag added - tagId=" + tagId + ", imageId=" + imageId);
   }).catch( err => {
-    // handle the error
-    win.webContents.send("addTagToImageResponse", "Error with query: " + err);
+      // handle the error
+      win.webContents.send("addTagToImageResponse","Error adding tag: " + err);
   });
 }

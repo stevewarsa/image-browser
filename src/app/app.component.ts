@@ -78,10 +78,21 @@ export class AppComponent implements OnInit {
   private getCurrentImageMetaData() {
     console.log("Calling fileService.getImageMetaData for file " + this.filesFound[this.currentIndex]);
     this.fileService.getImageMetaData(this.filesFound[this.currentIndex]).then((imageData: ImageData) => {
-      console.log("Got image metadata back for path:" + this.filesFound[this.currentIndex]);
-      this.currentMetaData = imageData;
-      console.log(this.currentMetaData);
-    })
+      if (imageData === null) {
+        // nothing back from database, so need create one for insert
+        this.currentMetaData = new ImageData();
+        this.currentMetaData.fullPath = this.filesFound[this.currentIndex];
+        let parts: string[] = this.filesFound[this.currentIndex].split("/");
+        this.currentMetaData.fileName = parts[parts.length - 1];
+        this.currentMetaData.filePath = this.currentMetaData.fullPath.replace("/" + this.currentMetaData.fileName, "");
+        console.log("Nothing back from database, so created ImageData object from current file:");
+        console.log(this.currentMetaData);
+      } else {
+        console.log("Got image metadata back from DB for path:" + this.filesFound[this.currentIndex]);
+        console.log(imageData);
+        this.currentMetaData = imageData;
+      }
+    });
   }
 
   copyImageToClipboard() {
@@ -108,6 +119,9 @@ export class AppComponent implements OnInit {
   }
 
   addTag() {
+    this.fileService.addTagToImage(this.currentMetaData, this.newTag).then(result => {
+      console.log(result);
+    });
   }
 
   private scroll(id) {
