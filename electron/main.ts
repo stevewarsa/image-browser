@@ -25,10 +25,9 @@ app.on("activate", () => {
 
 function createWindow() {
   win = new BrowserWindow();
-
   win.loadURL(
     url.format({
-      pathname: path.join(__dirname, `/../../dist/image-browser/index.html`),
+      pathname: path.join(__dirname, `/../../../dist/image-browser/index.html`),
       protocol: "file:",
       slashes: true
     })
@@ -67,12 +66,7 @@ function getFiles(path: string, filesArrayToFill: string[]) {
   });
 }
 
-ipcMain.on("copyImageToClipboard", (event, arg) => {
-  copyImageToClipboard(arg);
-  win.webContents.send("copyImageToClipboardResponse", "Image successfully copied!");
-});
-
-function copyImageToClipboard(imagePath: string) {
+ipcMain.on("copyImageToClipboard", (event, imagePath) => {
   console.log("Attempting to copy image " + imagePath + " to clipboard...");
   let image = nativeImage.createFromPath(imagePath);
   console.log("The following is the native image created from path:");
@@ -80,159 +74,139 @@ function copyImageToClipboard(imagePath: string) {
   console.log("Now writing image to clipboard...");
   clipboard.writeImage(image);
   console.log("Image has been written to clipboard");
-}
-
-ipcMain.on("imageDataLookup", (event, arg) => {
-  getImageMetaData(arg);
+  win.webContents.send("copyImageToClipboardResponse", "Image successfully copied!");
 });
 
-function getImageMetaData(imagePath) {
+ipcMain.on("imageDataLookup", (event, imagePath) => {
   console.log("Received 'imageDataLookup' message in main.ts with arg: " + imagePath + "...");
-  let someRows = [];
   let query = "select id, file_name, file_path from image_data where full_path = ?";
-  executeDb(database => database.query(query, [imagePath]).then(rows => someRows)).then(() => {
-    let imageData: ImageData = null;
-    for (let row of someRows) {
-      console.log(row['id']);
-      console.log(row['file_path']);
-      console.log(row['file_name']);
-      imageData = new ImageData();
-      imageData.id = row['id'];
-      imageData.fullPath = row['file_path'] + row['file_name'];
-      imageData.fileName = row['file_name'];
-      imageData.filePath = row['file_path'];
-      break;
+  runSqlStatement(query, [imagePath], (results, err) => {
+    console.log("imageDataLookup-Run SQL Statement Callback with results: ");
+    console.log(results);
+    if (results) {
+      let imageData: ImageData = null;
+      for (let row of results) {
+        imageData = new ImageData();
+        imageData.id = row['id'];
+        imageData.fullPath = row['file_path'] + "/" + row['file_name'];
+        imageData.fileName = row['file_name'];
+        imageData.filePath = row['file_path'];
+        break;
+      }
+      win.webContents.send("imageDataLookupResponse", imageData);
+    } else {
+      win.webContents.send("imageDataLookupResponse", "Error with query: " + err);
     }
-    win.webContents.send("imageDataLookupResponse", imageData);
+  });
+});
+
+ipcMain.on("getTagId", (event, tagName) => {
+  console.log("Received 'getTagId' message in main.ts with arg: " + tagName + "...");
+  runSqlStatement("select id from tag where tag_nm = ?", [tagName], (results, err) => {
+    console.log("getTagId-Run SQL Statement Callback with results: ");
+    console.log(results);
+    if (results) {
+      let tagId = null;
+      for (let row of results) {
+        tagId = row['id'];
+        break;
+      }
+      win.webContents.send("getTagIdResponse", tagId);  
+    } else {
+      win.webContents.send("getTagIdResponse", "Error with query: " + err);
+    }
+  });
+});
+
+ipcMain.on("getImageId", (event, fullImagePath) => {
+  console.log("Received 'getImageId' message in main.ts with arg: " + fullImagePath + "...");
+  let query = "select id from image_data where full_path = ?";
+  runSqlStatement(query, [fullImagePath], (results, err) => {
+    console.log("getImageId-Run SQL Statement Callback with results: ");
+    console.log(results);
+    if (results) {
+      let imageId = null;
+      for (let row of results) {
+        imageId = row['id'];
+        break;
+      }
+      win.webContents.send("getImageIdResponse", imageId);
+    } else {
+      win.webContents.send("getImageIdResponse", "Error with query: " + err);
+    }
+  });
+});
+
+ipcMain.on("saveImage", (event, imageMetaData) => {
+  console.log("Received 'saveImage' message in main.ts with arg: ");
+  console.log(imageMetaData);
+  let query = "insert into image_data (full_path, file_name, file_path) values(?, ?, ?)";
+  runSqlStatement(query, [imageMetaData.fullPath, imageMetaData.fileName, imageMetaData.filePath], (results, err) => {
+    console.log("saveImage-Run SQL Statement Callback with results: ");
+    console.log(results);
+    if (results) {
+      win.webContents.send("saveImageResponse", results.insertId);
+    } else {
+      win.webContents.send("saveImageResponse", "Error with query: " + err);
+    }
+  });
+});
+
+ipcMain.on("saveTag", (event, tagName) => {
+  console.log("Received 'saveTag' message in main.ts with arg: " + tagName);
+  let query = "insert into tag(tag_nm) values (?)";
+  runSqlStatement(query, [tagName], (results, err) => {
+    console.log("saveTag-Run SQL Statement Callback with results: ");
+    console.log(results);
+    if (results) {
+      win.webContents.send("saveTagResponse", results.insertId);
+    } else {
+      win.webContents.send("saveTagResponse", "Error with query: " + err);
+    }
+  });
+});
+
+ipcMain.on("saveImageTag", (event, imageTagParam) => {
+  console.log("Received 'saveImageTag' message in main.ts with arg: ");
+  console.log(imageTagParam);
+  let query = "insert into image_tag(image_id, tag_id) values (?, ?)";
+  runSqlStatement(query, [imageTagParam.imageId, imageTagParam.tagId], (results, err) => {
+    console.log("saveImageTag-Run SQL Statement Callback with results: ");
+    console.log(results);
+    if (results) {
+      win.webContents.send("saveImageTagResponse", "Image -> Tag Association saved for imageId=" + imageTagParam.imageId + ", tagId=" + imageTagParam.tagId);
+    } else {
+      win.webContents.send("saveImageTagResponse", "Error with query: " + err);
+    }
+  });
+});
+
+ipcMain.on("runSqlStatement", (event, arg) => {
+  console.log("Received 'runSqlStatement' message in main.ts with args: ");
+  console.log(arg);
+  runSqlStatement(arg.sql, arg.args, (results, err) => {
+    console.log("runSqlStatement-Run SQL Statement Callback with results: ");
+    console.log(results);
+    if (results) {
+      win.webContents.send("runSqlStatementResponse", results);
+    } else {
+      win.webContents.send("runSqlStatementResponse", "Error with query: " + err);
+    }
+  });
+});
+
+function runSqlStatement(sql: string, args:string[], callback) {
+  console.log("function runSqlStatement in main.ts with sql: " + sql);
+  console.log("and arguments: ");
+  console.log(args);
+  let results = null;
+  executeDb(database => database.query(sql, args).then(rows => { 
+      results = rows;
+    })
+  ).then(() => {
+    callback(results, null);
   }).catch( err => {
     // handle the error
-    win.webContents.send("imageDataLookupResponse", "Error with query: " + err);
-  });
-}
-
-ipcMain.on("addTagToImage", (event, arg) => {
-  // the arg is expected to contain the full image path and the tag name
-  // if the tag name does not exist, then a new tag will be added
-  addTagToImage(arg);
-  
-});
-
-function addTagToImage(tagParam: any) {
-  console.log("main.addTagToImage starting...");
-  let tag: string = tagParam.tag;
-  let imageFullPath: string = tagParam.fullPath;
-  let imageFileName: string = tagParam.fileName;
-  let imageFilePath: string = tagParam.filePath;
-  let imageQuery: string = "select id from image_data where full_path = ?";
-  let imageInsert: string = "insert into image_data (full_path, file_name, file_path) values(?, ?, ?)";
-  let tagQuery: string = "select id from tag where tag_nm = ?";
-  let tagInsert: string = "insert into tag (tag_nm) values(?)";
-  let imageTagInsert: string = "insert into image_tag (image_id, tag_id) values(?,?)";
-  let tagId = null;
-  let imageId = null;
-  let lastQueryRan = tagQuery;
-  let chainNo: number = 0;
-  console.log("Chain " + chainNo + ": Running tag query for tag '" + tag + "'...");
-  executeDb(
-    database => database.query(tagQuery, [tag])
-      .then(rows => {
-        chainNo += 1;
-        if (!rows || rows.length === 0) {
-          console.log("Chain " + chainNo + ": No results returned for tag '" + tag + "'.  Running tag insert...");
-          lastQueryRan = tagInsert;
-          return database.query(tagInsert, [tag]);
-        } else {
-          tagId = rows[0]['id'];
-          console.log("Chain " + chainNo + ": Tag id '" + tagId + " was found for tag '" + tag + "'.  Running image query...");
-          lastQueryRan = imageQuery;
-          return database.query(imageQuery, [imageFullPath]);
-        }
-      })
-      .then(rows => {
-        chainNo += 1;
-        console.log("Chain " + chainNo + ": Last query ran was '" + lastQueryRan + "'...");
-        if (lastQueryRan === imageQuery) {
-          // that means rows contains the imageQuery results
-          if (!rows || rows.length === 0) {
-            lastQueryRan = imageInsert;
-            console.log("Chain " + chainNo + ": No results returned for image '" + imageFullPath + "'.  Running image insert...");
-            return database.query(imageInsert, [imageFullPath, imageFileName, imageFilePath]);
-          } else {
-            // an image was found, and there is a tagId, so run the imageTagInsert
-            imageId = rows[0]['id'];
-            lastQueryRan = imageTagInsert;
-            console.log("Chain " + chainNo + ": Image id '" + imageId + " was found for image '" + imageFullPath + "'.  Running imageTag insert...");
-            return database.query(imageTagInsert, [imageId, tagId]);
-          }
-        } else if (lastQueryRan === tagInsert) {
-          // this means rows contains the tagInsert results
-          tagId = rows.insertId;
-          console.log("Chain " + chainNo + ": New tag inserted with id '" + tagId + " now running query for image '" + imageFullPath + "'...");
-          // therefore, we need to now run the imageQuery
-          lastQueryRan = imageQuery;
-          return database.query(imageQuery, [imageFullPath]);
-        }
-      })
-      .then(rows => {
-        chainNo += 1;
-        console.log("Chain " + chainNo + ": Last query ran was '" + lastQueryRan + "'...");
-        switch (lastQueryRan) {
-          case imageQuery:
-            // that means rows contains the imageQuery results
-            if (!rows || rows.length === 0) {
-              lastQueryRan = imageInsert;
-              console.log("Chain " + chainNo + ": No results returned for image '" + imageFullPath + "'.  Running image insert...");
-              return database.query(imageInsert, [imageFullPath, imageFileName, imageFilePath]);
-            } else {
-              // an image was found, and there is a tagId, so run the imageTagInsert
-              imageId = rows[0]['id'];
-              lastQueryRan = imageTagInsert;
-              console.log("Chain " + chainNo + ": Image id '" + imageId + " was found for image '" + imageFullPath + "'.  Running imageTag insert...");
-              return database.query(imageTagInsert, [imageId, tagId]);
-            }
-          case imageInsert:
-            imageId = rows.insertId;
-            console.log("Chain " + chainNo + ": New image inserted with id '" + imageId + " now running insert for imageTag with tagId '" + tagId + "'...");
-            lastQueryRan = imageTagInsert;
-            return database.query(imageTagInsert, [imageId, tagId]);
-          case imageTagInsert:
-            // if we're running imageTagInsert, we're done!
-            console.log("Chain " + chainNo + ": ImageTag record inserted with imageId '" + imageId + " and tagId '" + tagId + "', full process complete!");
-            break;
-          default:
-            break;
-        }
-      })
-      .then(rows => {
-        chainNo += 1;
-        console.log("Chain " + chainNo + ": Last query ran was '" + lastQueryRan + "'...");
-        switch (lastQueryRan) {
-          case imageInsert:
-            imageId = rows.insertId;
-            lastQueryRan = imageTagInsert;
-            console.log("Chain " + chainNo + ": New image inserted with id '" + imageId + " now running insert for imageTag with tagId '" + tagId + "'...");
-            return database.query(imageTagInsert, [imageId, tagId]);
-          case imageTagInsert:
-            // if we're running imageTagInsert, we're done!
-            console.log("Chain " + chainNo + ": ImageTag record inserted with imageId '" + imageId + " and tagId '" + tagId + "', full process complete!");
-            break;
-          default:
-            break;
-        }
-      })
-      .then(rows => {
-        chainNo += 1;
-        console.log("Chain " + chainNo + ": Last query ran was '" + lastQueryRan + "'...");
-        // the assumption is that this is the final insert
-        if (lastQueryRan === imageTagInsert) {
-          console.log("Chain " + chainNo + ": ImageTag record inserted with imageId '" + imageId + " and tagId '" + tagId + "', full process complete!");
-        }
-      })
-  ).then( () => {
-      // do something with someRows and otherRows
-      win.webContents.send("addTagToImageResponse", "tag added - tagId=" + tagId + ", imageId=" + imageId);
-  }).catch( err => {
-      // handle the error
-      win.webContents.send("addTagToImageResponse","Error adding tag: " + err);
+    callback(null, err);
   });
 }

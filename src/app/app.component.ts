@@ -110,17 +110,65 @@ export class AppComponent implements OnInit {
   viewForm() {
     this.showForm = true;
     this.newTag = null;
-    // this.todoToAdd.title = null;
-    // this.todoToAdd.category = "Default";
-    // this.todoToAdd.description = null;
-    // setTimeout(() => {
-    //   this.titleInput.nativeElement.focus();
-    // }, 100);
   }
 
   addTag() {
-    this.fileService.addTagToImage(this.currentMetaData, this.newTag).then(result => {
+    this.fileService.getTagId(this.newTag).then((tagId: string) => {
+      console.log("Finished getting tag, here is the response: ");
+      console.log(tagId);
+      if (tagId) {
+        this.locateImageId(tagId);
+      } else {
+        this.insertTag();
+      }
+    });
+  }
+
+  private insertTag() {
+    this.fileService.saveTag(this.newTag).then(tagId => {
+      console.log("Finished saving tag, here is the response: ");
+      console.log(tagId);
+      if (tagId) {
+        this.locateImageId(tagId);
+      } else {
+        console.log("No tagId came back from fileService.saveImage");
+      }
+    });
+  }
+
+  private locateImageId(tagId) {
+    this.fileService.getImageId(this.currentMetaData.fullPath).then(imageId => {
+      console.log("Finished locating image, here is the response: ");
+      console.log(imageId);
+      if (imageId) {
+        // insert image_tag record
+        this.insertImageTag(imageId, tagId);
+      } else {
+        // insert the image for the first time
+        this.insertImage(tagId);
+      }
+    });
+  }
+
+  private insertImage(tagId) {
+    this.fileService.saveImage(this.currentMetaData).then(imageId => {
+      console.log("Finished saving image, here is the response: ");
+      console.log(imageId);
+      if (imageId) {
+        // insert image record
+        this.currentMetaData.id = parseInt(imageId);
+        this.insertImageTag(imageId, tagId);
+      } else {
+        console.log("No imageId came back from fileService.saveImage");
+      }
+    });
+  }
+
+  private insertImageTag(imageId, tagId) {
+    this.fileService.saveImageTag(imageId, tagId).then(result => {
+      console.log("Finished saving image_tag record, here is the response: ");
       console.log(result);
+      this.showForm = false;
     });
   }
 

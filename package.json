@@ -1,7 +1,7 @@
 {
   "name": "image-browser",
   "version": "0.0.0",
-  "main": "electron/dist/main.js",
+  "main": "electron/dist/electron/main.js",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -9,7 +9,7 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "electron": "ng build && tsc --p electron && electron --inspect=5858 .",
+    "electron": "ng build && tsc --p electron && electron .",
     "electron-aot": "ng build --prod && electron ."
   },
   "private": true,
