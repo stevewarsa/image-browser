@@ -20,6 +20,7 @@ export class AppComponent implements OnInit {
   currentMetaData: ImageData = null;
   showForm: boolean = false;
   newTag: string = null;
+  existingTag: Tag = null;
   tags: Tag[] = [];
   constructor(private fileService: FileService) { }
 
@@ -27,7 +28,9 @@ export class AppComponent implements OnInit {
     this.busy = true;
     this.busyMessage = "Retrieving all the images ...";
     let dirPath = "C:/backup/pictures";
-    this.fileService.getFiles(dirPath).then((files: string[]) => {
+    Promise.all([this.fileService.getTags(), this.fileService.getFiles(dirPath)]).then((results: any[]) => {
+      this.tags = results[0];
+      let files: string[] = results[1];
       this.filesFound = files.filter(
         file => !file.toLowerCase().endsWith(".db") 
               && !file.toLowerCase().endsWith(".mp4") 
@@ -88,9 +91,18 @@ export class AppComponent implements OnInit {
         console.log("Nothing back from database, so created ImageData object from current file:");
         console.log(this.currentMetaData);
       } else {
+        this.currentMetaData = new ImageData();
+        this.currentMetaData.id = imageData.id;
+        this.currentMetaData.fileName = imageData.fileName;
+        this.currentMetaData.filePath = imageData.filePath;
+        this.currentMetaData.fullPath = imageData.fullPath;
+        this.fileService.getTagsForImage(this.currentMetaData.id).then((tagsForImage: Tag[]) => {
+          if (tagsForImage && tagsForImage.length > 0) {
+            this.currentMetaData.tags = tagsForImage;
+          }
+        });
         console.log("Got image metadata back from DB for path:" + this.filesFound[this.currentIndex]);
-        console.log(imageData);
-        this.currentMetaData = imageData;
+        console.log(this.currentMetaData);
       }
     });
   }
@@ -110,18 +122,42 @@ export class AppComponent implements OnInit {
   viewForm() {
     this.showForm = true;
     this.newTag = null;
+    this.existingTag = null;
   }
 
   addTag() {
-    this.fileService.getTagId(this.newTag).then((tagId: string) => {
-      console.log("Finished getting tag, here is the response: ");
-      console.log(tagId);
-      if (tagId) {
-        this.locateImageId(tagId);
+    if (this.newTag) {
+      // the user has entered a new tag, so treat it as such - first try to look it up
+      // just to make sure they didn't enter a duplicate one that already exists
+      this.fileService.getTagId(this.newTag).then((tagId: string) => {
+        console.log("Finished getting tag, here is the response: ");
+        console.log(tagId);
+        if (tagId) {
+          if (this.currentMetaData.id === -1) {
+            // the currently displayed image either has not been looked up yet, or
+            // does not yet exist in the database
+            this.locateImageId(tagId);
+          } else {
+            // the currently displayed image already has a database id, so don't look it up
+            // insert image_tag record
+            this.insertImageTag(this.currentMetaData.id, tagId);
+          }
+        } else {
+          this.insertTag();
+        }
+      });
+    } else {
+      // the user has selected an existing tag
+      if (this.currentMetaData.id === -1) {
+        // the currently displayed image either has not been looked up yet, or
+        // does not yet exist in the database
+        this.locateImageId(this.existingTag.id);
       } else {
-        this.insertTag();
+        // the currently displayed image already has a database id, so don't look it up
+        // insert image_tag record
+        this.insertImageTag(this.currentMetaData.id, this.existingTag.id);
       }
-    });
+    }
   }
 
   private insertTag() {
@@ -129,6 +165,13 @@ export class AppComponent implements OnInit {
       console.log("Finished saving tag, here is the response: ");
       console.log(tagId);
       if (tagId) {
+        let newTag: Tag = new Tag();
+        newTag.id = parseInt(tagId);
+        newTag.tagName = this.newTag;
+        this.tags.push(newTag);
+        this.tags.sort((a: Tag, b: Tag) => {
+          return a.tagName.toLowerCase().localeCompare(b.tagName.toLowerCase());
+        });
         this.locateImageId(tagId);
       } else {
         console.log("No tagId came back from fileService.saveImage");

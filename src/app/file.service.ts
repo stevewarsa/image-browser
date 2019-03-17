@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { IpcRenderer } from "electron";
 import { ImageData } from './image-data';
+import { Tag } from './tag';
 
 @Injectable({
   providedIn: 'root'
@@ -58,6 +59,26 @@ export class FileService {
       this.ipc.send("imageDataLookup", imagePath);
     });
   }
+
+  async getTagsForImage(imageId: number) {
+    return new Promise<Tag[]>((resolve, reject) => {
+      this.ipc.once("runSqlStatementResponse", (event, results) => {
+        let tags: Tag[] = [];
+        for (let result of results) {
+          //console.log("FileService.getTags - processing tagId=" + result['id'] + ", tagNm=" + result['tag_nm']);
+          let tag: Tag = new Tag();
+          tag.id = parseInt(result['id']);
+          tag.tagName = result['tag_nm'];
+          tags.push(tag);
+        }
+        resolve(tags);
+      });
+      //console.log("Sending message to main 'runSqlStatement'");
+      this.ipc.send("runSqlStatement", {sql: "select id, tag_nm from tag, image_tag where id = tag_id and image_id = ?", args: [imageId]});
+    });
+  }
+
+  
 
   async getTagId(tagName: string) {
     return new Promise<string>((resolve, reject) => {
@@ -123,13 +144,20 @@ export class FileService {
     });
   }
 
-  // async addTagToImage(imageMetaData: ImageData, tagName: string) {
-  //   return new Promise<ImageData>((resolve, reject) => {
-  //     this.ipc.once("addTagToImageResponse", (event, arg) => {
-  //       resolve(arg);
-  //     });
-  //     console.log("Sending message to main 'addTagToImage' with image " + imageMetaData.fullPath + " and tag " + tagName + "...");
-  //     this.ipc.send("addTagToImage", {fullPath: imageMetaData.fullPath, fileName: imageMetaData.fileName, filePath: imageMetaData.filePath, tag: tagName});
-  //   });
-  // }
-}
+  async getTags() {
+    return new Promise<Tag[]>((resolve, reject) => {
+      this.ipc.once("runSqlStatementResponse", (event, results) => {
+        let tags: Tag[] = [];
+        for (let result of results) {
+          //console.log("FileService.getTags - processing tagId=" + result['id'] + ", tagNm=" + result['tag_nm']);
+          let tag: Tag = new Tag();
+          tag.id = parseInt(result['id']);
+          tag.tagName = result['tag_nm'];
+          tags.push(tag);
+        }
+        resolve(tags);
+      });
+      //console.log("Sending message to main 'runSqlStatement'");
+      this.ipc.send("runSqlStatement", {sql: "select id, tag_nm from tag", args: null});
+    });
+  }}

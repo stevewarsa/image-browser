@@ -26,9 +26,15 @@
     </div>
     <div class="form-group">
       <label class="mr-2" for="existingtag">Existing Tag:</label>
-      <select class="form-control" id="existingtag" name="existingtag">
-        <option *ngFor="let tag of tags" value="{{tag.id}}">{{tag.tagName}}</option>
+      <select class="form-control" id="existingtag" name="existingtag" [(ngModel)]="existingTag">
+        <option *ngFor="let tag of tags" [ngValue]="tag">{{tag.tagName}}</option>
       </select>
+    </div>
+    <div *ngIf="currentMetaData && currentMetaData.id !== -1 && currentMetaData.tags && currentMetaData.tags.length > 0">
+      <label class="mr-2" for="tagList">Tagged With:</label>
+      <ol id="tagList" class="form-control">
+        <li *ngFor="let taggedWith of currentMetaData.tags">{{taggedWith.tagName}} <a class="link" (click)="remove()"><i class="fa fa-times-rectangle"></i></a></li>
+      </ol>
     </div>
     <!-- <div class="form-group mr-3">
       <label class="mr-2" for="title">Title:</label>
