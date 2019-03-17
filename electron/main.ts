@@ -185,8 +185,8 @@ ipcMain.on("runSqlStatement", (event, arg) => {
   console.log("Received 'runSqlStatement' message in main.ts with args: ");
   console.log(arg);
   runSqlStatement(arg.sql, arg.args, (results, err) => {
-    console.log("runSqlStatement-Run SQL Statement Callback with results: ");
-    console.log(results);
+    // console.log("runSqlStatement-Run SQL Statement Callback with results: ");
+    // console.log(results);
     if (results) {
       win.webContents.send("runSqlStatementResponse", results);
     } else {

@@ -10,7 +10,6 @@ import { Tag } from './tag';
 })
 export class AppComponent implements OnInit {
   title = "Image Browser";
-  filesFound: string[] = [];
   busy: boolean = true;
   busyMessage: string = null;
   currentFile: string = null;
@@ -22,42 +21,56 @@ export class AppComponent implements OnInit {
   newTag: string = null;
   existingTag: Tag = null;
   tags: Tag[] = [];
+  imageDataArray: ImageData[] = [];
+
   constructor(private fileService: FileService) { }
 
   ngOnInit() {
     this.busy = true;
     this.busyMessage = "Retrieving all the images ...";
     let dirPath = "C:/backup/pictures";
-    Promise.all([this.fileService.getTags(), this.fileService.getFiles(dirPath)]).then((results: any[]) => {
+    Promise.all([this.fileService.getTags(), this.fileService.getAllImageData(), this.fileService.getFiles(dirPath)]).then((results: any[]) => {
       this.tags = results[0];
-      let files: string[] = results[1];
-      this.filesFound = files.filter(
+      let allImageData: {[fullPath:string]: ImageData} = results[1];
+      let files: string[] = results[2];
+      let filesFound = files.filter(
         file => !file.toLowerCase().endsWith(".db") 
               && !file.toLowerCase().endsWith(".mp4") 
               && !file.toLowerCase().endsWith(".3gp") 
               && !file.toLowerCase().endsWith(".docx")
               && !file.toLowerCase().endsWith(".ico")
               && !file.toLowerCase().endsWith(".mov"));
+      filesFound.forEach(fullFilePath => {
+        let img: ImageData = allImageData[fullFilePath];
+        if (!img) {
+          img = new ImageData();
+          img.fullPath = fullFilePath;
+          let parts: string[] = fullFilePath.split("/");
+          img.fileName = parts[parts.length - 1];
+          img.filePath = img.fullPath.replace("/" + img.fileName, "");
+        }
+        this.imageDataArray.push(img);
+      });
       this.busy = false;
       this.busyMessage = null;
     });
   }
 
   doRandom() {
-    let randNum: number = Math.floor(Math.random() * (this.filesFound.length - 1));
-    console.log("Random number between 0 and " + (this.filesFound.length - 1) + ": " + randNum);
+    let randNum: number = Math.floor(Math.random() * (this.imageDataArray.length - 1));
+    console.log("Random number between 0 and " + (this.imageDataArray.length - 1) + ": " + randNum);
     this.lastIndexes.push(this.currentIndex);
     this.currentLastViewedIndexInLastIndexes = this.lastIndexes.length - 1;
     this.currentIndex = randNum;
-    this.getCurrentImageMetaData();
+    this.currentMetaData = this.imageDataArray[this.currentIndex];
     this.scroll(this.currentIndex);
   }
 
   next() {
     this.lastIndexes.push(this.currentIndex);
     this.currentLastViewedIndexInLastIndexes = this.lastIndexes.length - 1;
-    this.currentIndex === (this.filesFound.length - 1) ? this.currentIndex = 0 : this.currentIndex = this.currentIndex + 1;
-    this.getCurrentImageMetaData();
+    this.currentIndex === (this.imageDataArray.length - 1) ? this.currentIndex = 0 : this.currentIndex = this.currentIndex + 1;
+    this.currentMetaData = this.imageDataArray[this.currentIndex];
     this.scroll(this.currentIndex);
   }
 
@@ -66,55 +79,26 @@ export class AppComponent implements OnInit {
     if (this.currentLastViewedIndexInLastIndexes > 0) {
       this.currentLastViewedIndexInLastIndexes -= 1;
     }
-    this.getCurrentImageMetaData();
+    this.currentMetaData = this.imageDataArray[this.currentIndex];
     this.scroll(this.currentIndex);
   }
 
   prev() {
     this.lastIndexes.push(this.currentIndex);
     this.currentLastViewedIndexInLastIndexes = this.lastIndexes.length - 1;
-    this.currentIndex === 0 ? this.currentIndex = this.filesFound.length - 1 : this.currentIndex = this.currentIndex - 1;
-    this.getCurrentImageMetaData();
+    this.currentIndex === 0 ? this.currentIndex = this.imageDataArray.length - 1 : this.currentIndex = this.currentIndex - 1;
+    this.currentMetaData = this.imageDataArray[this.currentIndex];
     this.scroll(this.currentIndex);
   }
 
-  private getCurrentImageMetaData() {
-    console.log("Calling fileService.getImageMetaData for file " + this.filesFound[this.currentIndex]);
-    this.fileService.getImageMetaData(this.filesFound[this.currentIndex]).then((imageData: ImageData) => {
-      if (imageData === null) {
-        // nothing back from database, so need create one for insert
-        this.currentMetaData = new ImageData();
-        this.currentMetaData.fullPath = this.filesFound[this.currentIndex];
-        let parts: string[] = this.filesFound[this.currentIndex].split("/");
-        this.currentMetaData.fileName = parts[parts.length - 1];
-        this.currentMetaData.filePath = this.currentMetaData.fullPath.replace("/" + this.currentMetaData.fileName, "");
-        console.log("Nothing back from database, so created ImageData object from current file:");
-        console.log(this.currentMetaData);
-      } else {
-        this.currentMetaData = new ImageData();
-        this.currentMetaData.id = imageData.id;
-        this.currentMetaData.fileName = imageData.fileName;
-        this.currentMetaData.filePath = imageData.filePath;
-        this.currentMetaData.fullPath = imageData.fullPath;
-        this.fileService.getTagsForImage(this.currentMetaData.id).then((tagsForImage: Tag[]) => {
-          if (tagsForImage && tagsForImage.length > 0) {
-            this.currentMetaData.tags = tagsForImage;
-          }
-        });
-        console.log("Got image metadata back from DB for path:" + this.filesFound[this.currentIndex]);
-        console.log(this.currentMetaData);
-      }
-    });
-  }
-
   copyImageToClipboard() {
-    this.fileService.copyImageToClipboard(this.filesFound[this.currentIndex]).then((response: string) => {
+    this.fileService.copyImageToClipboard(this.imageDataArray[this.currentIndex].fullPath).then((response: string) => {
       console.log("Response from copying image: " + response);
     });
   }
 
   openImageInApp() {
-    this.fileService.openImageInApp(this.filesFound[this.currentIndex]).then((response: string) => {
+    this.fileService.openImageInApp(this.imageDataArray[this.currentIndex].fullPath).then((response: string) => {
       console.log("Response from opening image: " + response);
     });
   }

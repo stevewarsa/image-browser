@@ -30,6 +30,40 @@ export class FileService {
     });
   }
 
+  async getAllImageData() {
+    return new Promise<{[fullPath:string]: ImageData}>((resolve, reject) => {
+      this.ipc.once("runSqlStatementResponse", (event, results) => {
+        let imageDataByPath: {[fullPath:string]: ImageData} = {};
+        for (let result of results) {
+          let fullPath: string = result['full_path'];
+          let imageData: ImageData = imageDataByPath[fullPath];
+          if (!imageData) {
+            imageData = new ImageData();
+            imageData.id = parseInt(result['id']);
+            imageData.fileName = result['file_name'];
+            imageData.filePath = result['file_path'];
+            imageData.fullPath = fullPath;
+            imageDataByPath[fullPath] = imageData;
+          }
+          // now populate the tag
+          if (result['tag_id'] && result['tag_id'].length > 0 && result['tag_nm'] && result['tag_nm'].length > 0) {
+            let tag: Tag = new Tag();
+            tag.id = parseInt(result['tag_id']);
+            tag.tagName = result['tag_nm'];
+            imageData.addTag(tag);
+          }
+        }
+        resolve(imageDataByPath);
+      });
+      let sql: string = "select img.id as image_id, full_path, file_name, file_path, t.id as tag_id, tag_nm ";
+      sql += "from image_data img ";
+      sql += "LEFT JOIN image_tag imgt on img.id = imgt.image_id ";
+      sql += "LEFT JOIN tag t on imgt.tag_id = t.id ";
+      sql += "order by full_path";
+      this.ipc.send("runSqlStatement", {sql: sql, args: null});
+    });
+  }
+
   async copyImageToClipboard(imagePath: string) {
     return new Promise<string>((resolve, reject) => {
       this.ipc.once("copyImageToClipboardResponse", (event, arg) => {
@@ -160,4 +194,5 @@ export class FileService {
       //console.log("Sending message to main 'runSqlStatement'");
       this.ipc.send("runSqlStatement", {sql: "select id, tag_nm from tag", args: null});
     });
-  }}
+  }
+}

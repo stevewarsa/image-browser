@@ -2,7 +2,7 @@
   {{busyMessage}}<br>
   <img src="assets/ajax-loader.gif" />
 </div>
-<div *ngIf="!busy && filesFound && filesFound.length > 0" class="container">
+<div *ngIf="!busy && imageDataArray && imageDataArray.length > 0" class="container">
   <div class="btn-toolbar mb-3" role="toolbar" aria-label="Navigational controls">
     <div class="btn-group mr-3" role="group" aria-label="Historical Back">
         <button type="button" class="btn btn-secondary" (click)="back()">Last Viewed</button>
@@ -33,7 +33,7 @@
     <div *ngIf="currentMetaData && currentMetaData.id !== -1 && currentMetaData.tags && currentMetaData.tags.length > 0">
       <label class="mr-2" for="tagList">Tagged With:</label>
       <ol id="tagList" class="form-control">
-        <li *ngFor="let taggedWith of currentMetaData.tags">{{taggedWith.tagName}} <a class="link" (click)="remove()"><i class="fa fa-times-rectangle"></i></a></li>
+        <li *ngFor="let taggedWith of currentMetaData.tags">{{taggedWith.tagName}} <a class="link" (click)="remove()"><i style="color: red;" class="fa fa-times-rectangle"></i></a></li>
       </ol>
     </div>
     <!-- <div class="form-group mr-3">
@@ -48,18 +48,18 @@
   </form>
   <div class="row">
     <div class="col">
-      <img style="max-width: 100%; min-height: 600px; max-height: 600px;" src="file:///{{filesFound[currentIndex]}}">
+      <img style="max-width: 100%; min-height: 600px; max-height: 600px;" src="file:///{{imageDataArray[currentIndex].fullPath}}">
     </div>
   </div>
   <div class="row">
     <div class="col">
-      (index={{(currentIndex + 1)}}) File Path: {{filesFound[currentIndex]}}
+      (index={{(currentIndex + 1)}}) File Path: {{imageDataArray[currentIndex].fullPath}}
     </div>
   </div>
   <div class="row scrollableDiv">
     <ol class="m-3">
-        <li *ngFor="let file of filesFound; let idx = index">
-          <a id="{{idx}}" class="link" (click)="currentIndex = idx">{{file}}</a>
+        <li *ngFor="let file of imageDataArray; let idx = index">
+          <a id="{{idx}}" class="link" (click)="currentIndex = idx">{{file.fullPath}}</a>
         </li>
     </ol>
   </div>
