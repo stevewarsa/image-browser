@@ -15,37 +15,8 @@
     <div class="btn-group mr-3" role="group" aria-label="Other commands">
       <button type="button" class="btn btn-primary m-1" (click)="copyImageToClipboard()"><i class="fa fa-clipboard"></i> Copy Image</button>
       <button type="button" class="btn btn-primary m-1" (click)="openImageInApp()"><i class="fa fa-open"></i> Open Image</button>
-      <button [hidden]="showForm" (click)="viewForm()" type="button" class="btn btn-secondary m-1"><i class="fa fa-plus-square"></i> Show Tag Form</button>
-      <button [hidden]="!showForm" (click)="showForm = false" type="button" class="btn btn-secondary m-1"><i class="fa fa-minus-square-o"></i> Hide Tag Form</button>
     </div>
   </div>
-  <form [hidden]="!showForm" class="mr-3 mb-2">
-    <div class="form-group">
-      <label class="mr-2" for="newtag">New Tag:</label>
-      <input type="text" class="form-control" id="newtag" name="newtag" [(ngModel)]="newTag">
-    </div>
-    <div class="form-group">
-      <label class="mr-2" for="existingtag">Existing Tag:</label>
-      <select class="form-control" id="existingtag" name="existingtag" [(ngModel)]="existingTag">
-        <option *ngFor="let tag of tags" [ngValue]="tag">{{tag.tagName}}</option>
-      </select>
-    </div>
-    <div *ngIf="currentMetaData && currentMetaData.id !== -1 && currentMetaData.tags && currentMetaData.tags.length > 0">
-      <label class="mr-2" for="tagList">Tagged With:</label>
-      <ol id="tagList" class="form-control">
-        <li *ngFor="let taggedWith of currentMetaData.tags">{{taggedWith.tagName}} <a class="link" (click)="remove()"><i style="color: red;" class="fa fa-times-rectangle"></i></a></li>
-      </ol>
-    </div>
-    <!-- <div class="form-group mr-3">
-      <label class="mr-2" for="title">Title:</label>
-      <input #titleInput type="text" class="form-control" id="title" name="title" [(ngModel)]="todoToAdd.title">
-    </div>
-    <div class="form-group mr-3">
-        <label class="mr-2" for="desc">Description:</label>
-        <textarea class="form-control" name="desc" id="desc" name="desc" cols="20" rows="4" [(ngModel)]="todoToAdd.description"></textarea>
-      </div> -->
-    <button type="button" (click)="addTag()" class="btn btn-primary">Add Tag</button>
-  </form>
   <div class="row">
     <div class="col">
       <img style="max-width: 100%; min-height: 600px; max-height: 600px;" src="file:///{{imageDataArray[currentIndex].fullPath}}">
@@ -56,12 +27,21 @@
       (index={{(currentIndex + 1)}}) File Path: {{imageDataArray[currentIndex].fullPath}}
     </div>
   </div>
-  <div class="row scrollableDiv">
-    <ol class="m-3">
-        <li *ngFor="let file of imageDataArray; let idx = index">
-          <a id="{{idx}}" class="link" (click)="currentIndex = idx">{{file.fullPath}}</a>
-        </li>
-    </ol>
+  <div class="row mb-2">
+    <label class="mr-2" for="newtag">New Tag:</label>
+    <input class="mr-2" type="text" id="newtag" name="newtag" [(ngModel)]="newTag">
+    <button type="button" (click)="addTag()" class="btn btn-primary">Add Tag</button>
+  </div>
+  <div class="row mb-2" *ngFor="let tagRow of tagRows">
+    <input class="mr-1" [hidden]="!tagRow[0]" type="checkbox" (change)="tagRow[0] ? updateTagFromUI($event.target.checked, tagRow[0].tagName) : updateTagFromUI($event.target.checked, null)" [checked]="tagRow[0] ? tagFlags[tagRow[0].tagName] : false"> {{tagRow[0]?.tagName}}
+    <input class="mr-1" [hidden]="!tagRow[1]" type="checkbox" (change)="tagRow[1] ? updateTagFromUI($event.target.checked, tagRow[1].tagName) : updateTagFromUI($event.target.checked, null)" [checked]="tagRow[1] ? tagFlags[tagRow[1].tagName] : false"> {{tagRow[1]?.tagName}}
+    <input class="mr-1" [hidden]="!tagRow[2]" type="checkbox" (change)="tagRow[2] ? updateTagFromUI($event.target.checked, tagRow[2].tagName) : updateTagFromUI($event.target.checked, null)" [checked]="tagRow[2] ? tagFlags[tagRow[2].tagName] : false"> {{tagRow[2]?.tagName}}
+    <input class="mr-1" [hidden]="!tagRow[3]" type="checkbox" (change)="tagRow[3] ? updateTagFromUI($event.target.checked, tagRow[3].tagName) : updateTagFromUI($event.target.checked, null)" [checked]="tagRow[3] ? tagFlags[tagRow[3].tagName] : false"> {{tagRow[3]?.tagName}}
+    <input class="mr-1" [hidden]="!tagRow[4]" type="checkbox" (change)="tagRow[4] ? updateTagFromUI($event.target.checked, tagRow[4].tagName) : updateTagFromUI($event.target.checked, null)" [checked]="tagRow[4] ? tagFlags[tagRow[4].tagName] : false"> {{tagRow[4]?.tagName}}
+    <input [hidden]="!tagRow[5]" type="checkbox" (change)="tagRow[5] ? updateTagFromUI($event.target.checked, tagRow[5].tagName) : updateTagFromUI($event.target.checked, null)" [checked]="tagRow[5] ? tagFlags[tagRow[5].tagName] : false"> {{tagRow[5]?.tagName}}
+  </div>
+  <div class="row mb-2">
+    <button type="button" (click)="applyTags()" class="btn btn-primary">Apply Tag Updates</button>
   </div>
 </div>
 <router-outlet></router-outlet>

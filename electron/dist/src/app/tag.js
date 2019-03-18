@@ -4,6 +4,7 @@ var Tag = /** @class */ (function () {
     function Tag() {
         this.id = -1;
         this.tagName = null;
+        this.selected = false;
     }
     return Tag;
 }());

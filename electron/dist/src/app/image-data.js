@@ -6,21 +6,11 @@ var ImageData = /** @class */ (function () {
         this.fullPath = null;
         this.fileName = null;
         this.filePath = null;
-        this._tags = [];
+        this.tags = [];
     }
     ImageData.prototype.addTag = function (tag) {
-        this._tags.push(tag);
+        this.tags.push(tag);
     };
-    Object.defineProperty(ImageData.prototype, "tags", {
-        get: function () {
-            return this._tags;
-        },
-        set: function (tags) {
-            this._tags = tags;
-        },
-        enumerable: true,
-        configurable: true
-    });
     return ImageData;
 }());
 exports.ImageData = ImageData;

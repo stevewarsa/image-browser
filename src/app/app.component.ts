@@ -12,16 +12,15 @@ export class AppComponent implements OnInit {
   title = "Image Browser";
   busy: boolean = true;
   busyMessage: string = null;
-  currentFile: string = null;
-  currentIndex: number = 0;
+  currentIndex: number = -1;
   lastIndexes: number[] = [0];
   currentLastViewedIndexInLastIndexes: number = 0;
   currentMetaData: ImageData = null;
-  showForm: boolean = false;
   newTag: string = null;
-  existingTag: Tag = null;
   tags: Tag[] = [];
+  tagRows: Tag[][] = [];
   imageDataArray: ImageData[] = [];
+  tagFlags: {[tagName:string]: boolean} = {};
 
   constructor(private fileService: FileService) { }
 
@@ -29,8 +28,16 @@ export class AppComponent implements OnInit {
     this.busy = true;
     this.busyMessage = "Retrieving all the images ...";
     let dirPath = "C:/backup/pictures";
-    Promise.all([this.fileService.getTags(), this.fileService.getAllImageData(), this.fileService.getFiles(dirPath)]).then((results: any[]) => {
-      this.tags = results[0];
+    Promise.all([
+      this.fileService.getTags(), 
+      this.fileService.getAllImageData(), 
+      this.fileService.getFiles(dirPath)
+    ]).then((results: any[]) => {
+      results[0].forEach(tg => {
+        this.tags.push(tg);
+      });
+      let tmpTags = results[0];
+      this.createTagRows(tmpTags);
       let allImageData: {[fullPath:string]: ImageData} = results[1];
       let files: string[] = results[2];
       let filesFound = files.filter(
@@ -51,19 +58,28 @@ export class AppComponent implements OnInit {
         }
         this.imageDataArray.push(img);
       });
+      this.imageDataArray
+      this.next();
       this.busy = false;
       this.busyMessage = null;
     });
   }
 
+  private createTagRows(tmpTags: any) {
+    this.tagRows = [];
+    while (tmpTags.length > 0) {
+      let subArray = tmpTags.splice(0, 6);
+      this.tagRows.push(subArray);
+    }
+  }
+
   doRandom() {
     let randNum: number = Math.floor(Math.random() * (this.imageDataArray.length - 1));
-    console.log("Random number between 0 and " + (this.imageDataArray.length - 1) + ": " + randNum);
     this.lastIndexes.push(this.currentIndex);
     this.currentLastViewedIndexInLastIndexes = this.lastIndexes.length - 1;
     this.currentIndex = randNum;
     this.currentMetaData = this.imageDataArray[this.currentIndex];
-    this.scroll(this.currentIndex);
+    this.updateFlags();
   }
 
   next() {
@@ -71,7 +87,19 @@ export class AppComponent implements OnInit {
     this.currentLastViewedIndexInLastIndexes = this.lastIndexes.length - 1;
     this.currentIndex === (this.imageDataArray.length - 1) ? this.currentIndex = 0 : this.currentIndex = this.currentIndex + 1;
     this.currentMetaData = this.imageDataArray[this.currentIndex];
-    this.scroll(this.currentIndex);
+    this.updateFlags();
+  }
+
+  private updateFlags() {
+    this.tags.forEach(tag => { 
+      this.tagFlags[tag.tagName] = false;
+    });
+    if (this.currentMetaData && this.currentMetaData.tags && this.currentMetaData.tags.length > 0) {
+      for (let tag of this.currentMetaData.tags) {
+        console.log("updateFlags - processing tag '" + tag.tagName + "'");
+        this.tagFlags[tag.tagName] = true;
+      }
+    }
   }
 
   back() {
@@ -80,7 +108,7 @@ export class AppComponent implements OnInit {
       this.currentLastViewedIndexInLastIndexes -= 1;
     }
     this.currentMetaData = this.imageDataArray[this.currentIndex];
-    this.scroll(this.currentIndex);
+    this.updateFlags();
   }
 
   prev() {
@@ -88,7 +116,7 @@ export class AppComponent implements OnInit {
     this.currentLastViewedIndexInLastIndexes = this.lastIndexes.length - 1;
     this.currentIndex === 0 ? this.currentIndex = this.imageDataArray.length - 1 : this.currentIndex = this.currentIndex - 1;
     this.currentMetaData = this.imageDataArray[this.currentIndex];
-    this.scroll(this.currentIndex);
+    this.updateFlags();
   }
 
   copyImageToClipboard() {
@@ -103,12 +131,6 @@ export class AppComponent implements OnInit {
     });
   }
 
-  viewForm() {
-    this.showForm = true;
-    this.newTag = null;
-    this.existingTag = null;
-  }
-
   addTag() {
     if (this.newTag) {
       // the user has entered a new tag, so treat it as such - first try to look it up
@@ -116,94 +138,90 @@ export class AppComponent implements OnInit {
       this.fileService.getTagId(this.newTag).then((tagId: string) => {
         console.log("Finished getting tag, here is the response: ");
         console.log(tagId);
-        if (tagId) {
-          if (this.currentMetaData.id === -1) {
-            // the currently displayed image either has not been looked up yet, or
-            // does not yet exist in the database
-            this.locateImageId(tagId);
-          } else {
-            // the currently displayed image already has a database id, so don't look it up
-            // insert image_tag record
-            this.insertImageTag(this.currentMetaData.id, tagId);
-          }
+        if (!tagId) {
+          this.fileService.saveTag(this.newTag).then(tagId => {
+            console.log("Finished saving tag, here is the response: ");
+            console.log(tagId);
+            if (tagId) {
+              let newTag: Tag = new Tag();
+              newTag.id = parseInt(tagId);
+              newTag.tagName = this.newTag;
+              this.tags.push(newTag);
+              this.tags.sort((a: Tag, b: Tag) => {
+                return a.tagName.toLowerCase().localeCompare(b.tagName.toLowerCase());
+              });
+              // slice() creates a shallow copy of the array
+              this.createTagRows(this.tags.slice());
+              // now make sure the new tag shows up as checked
+              this.tagFlags[newTag.tagName] = true;
+            } else {
+              console.log("No tagId came back from fileService.saveImage");
+            }
+          });
+        }
+      });
+    }
+    this.newTag = null;
+  }
+
+  updateTagFromUI(checked, tagName: string) {
+    console.log("updateTag - checked=" + checked + ", tagName=" + tagName);
+    if (tagName) {
+      this.tagFlags[tagName] = checked;
+    }
+  }
+
+  private updateTagsOnCurrentImage() {
+    this.currentMetaData.tags = [];
+    // first go through selected tags and make sure this object is updated
+    for (let tagName of Object.keys(this.tagFlags)) {
+      if (this.tagFlags[tagName]) {
+        // the current tag is selected, so add that tag to the image
+        let matchingTags: Tag[] = this.tags.filter((tag: Tag) => tag.tagName === tagName);
+        if (matchingTags && matchingTags.length === 1) {
+          this.currentMetaData.addTag(matchingTags[0]);
+        }
+      }
+    }
+  }
+
+  applyTags() {
+    // first clear the existing tags on the image
+    this.updateTagsOnCurrentImage();
+    if (this.currentMetaData.id === -1) {
+      // the currently displayed image either has not been looked up yet, or
+      // does not yet exist in the database
+      this.fileService.saveImage(this.currentMetaData).then(imageId => {
+        console.log("Finished saving image, here is the response: ");
+        console.log(imageId);
+        if (imageId) {
+          // we got an image id back so, update the current image object
+          this.currentMetaData.id = parseInt(imageId);
+          // now remove the tags for this image
+          this.deleteImageTags();
         } else {
-          this.insertTag();
+          console.log("No imageId came back from fileService.saveImage");
         }
       });
     } else {
-      // the user has selected an existing tag
-      if (this.currentMetaData.id === -1) {
-        // the currently displayed image either has not been looked up yet, or
-        // does not yet exist in the database
-        this.locateImageId(this.existingTag.id);
-      } else {
-        // the currently displayed image already has a database id, so don't look it up
-        // insert image_tag record
-        this.insertImageTag(this.currentMetaData.id, this.existingTag.id);
-      }
+      // the currently displayed image already has a database id, so don't look it up
+      // remove existing image tag records
+      this.deleteImageTags();
     }
   }
 
-  private insertTag() {
-    this.fileService.saveTag(this.newTag).then(tagId => {
-      console.log("Finished saving tag, here is the response: ");
-      console.log(tagId);
-      if (tagId) {
-        let newTag: Tag = new Tag();
-        newTag.id = parseInt(tagId);
-        newTag.tagName = this.newTag;
-        this.tags.push(newTag);
-        this.tags.sort((a: Tag, b: Tag) => {
-          return a.tagName.toLowerCase().localeCompare(b.tagName.toLowerCase());
-        });
-        this.locateImageId(tagId);
-      } else {
-        console.log("No tagId came back from fileService.saveImage");
-      }
-    });
-  }
-
-  private locateImageId(tagId) {
-    this.fileService.getImageId(this.currentMetaData.fullPath).then(imageId => {
-      console.log("Finished locating image, here is the response: ");
-      console.log(imageId);
-      if (imageId) {
-        // insert image_tag record
-        this.insertImageTag(imageId, tagId);
-      } else {
-        // insert the image for the first time
-        this.insertImage(tagId);
-      }
-    });
-  }
-
-  private insertImage(tagId) {
-    this.fileService.saveImage(this.currentMetaData).then(imageId => {
-      console.log("Finished saving image, here is the response: ");
-      console.log(imageId);
-      if (imageId) {
-        // insert image record
-        this.currentMetaData.id = parseInt(imageId);
-        this.insertImageTag(imageId, tagId);
-      } else {
-        console.log("No imageId came back from fileService.saveImage");
-      }
-    });
-  }
-
-  private insertImageTag(imageId, tagId) {
-    this.fileService.saveImageTag(imageId, tagId).then(result => {
-      console.log("Finished saving image_tag record, here is the response: ");
+  private deleteImageTags() {
+    this.fileService.deleteImageTags(this.currentMetaData.id).then(result => {
+      console.log("Finished deleting image_tag records, here is the number of affected rows: ");
       console.log(result);
-      this.showForm = false;
+      this.insertImageTags();
     });
   }
 
-  private scroll(id) {
-    console.log(`scrolling to ${id + 1}`);
-    let el = document.getElementById(id + 1);
-    if (el) {
-      el.scrollIntoView();
-    }
+  private insertImageTags() {
+    this.fileService.saveImageTags(this.currentMetaData).then(result => {
+      console.log("Finished saving image_tag records, here is the response: ");
+      console.log(result);
+    });
   }
 }

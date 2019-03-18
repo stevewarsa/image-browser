@@ -172,14 +172,15 @@ electron_1.ipcMain.on("saveImageTag", function (event, imageTagParam) {
 electron_1.ipcMain.on("runSqlStatement", function (event, arg) {
     console.log("Received 'runSqlStatement' message in main.ts with args: ");
     console.log(arg);
+    var respondWith = arg.respondWith;
     runSqlStatement(arg.sql, arg.args, function (results, err) {
         // console.log("runSqlStatement-Run SQL Statement Callback with results: ");
         // console.log(results);
         if (results) {
-            win.webContents.send("runSqlStatementResponse", results);
+            win.webContents.send(respondWith, results);
         }
         else {
-            win.webContents.send("runSqlStatementResponse", "Error with query: " + err);
+            win.webContents.send(respondWith, "Error with query: " + err);
         }
     });
 });

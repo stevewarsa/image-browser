@@ -32,27 +32,33 @@ export class FileService {
 
   async getAllImageData() {
     return new Promise<{[fullPath:string]: ImageData}>((resolve, reject) => {
-      this.ipc.once("runSqlStatementResponse", (event, results) => {
+      this.ipc.once("getAllImageDataResponse", (event, results) => {
         let imageDataByPath: {[fullPath:string]: ImageData} = {};
+        console.log("getAllImageData - here are the results for the query:");
+        console.log(results);
         for (let result of results) {
           let fullPath: string = result['full_path'];
           let imageData: ImageData = imageDataByPath[fullPath];
           if (!imageData) {
             imageData = new ImageData();
-            imageData.id = parseInt(result['id']);
+            imageData.id = parseInt(result['image_id']);
             imageData.fileName = result['file_name'];
             imageData.filePath = result['file_path'];
             imageData.fullPath = fullPath;
             imageDataByPath[fullPath] = imageData;
           }
           // now populate the tag
-          if (result['tag_id'] && result['tag_id'].length > 0 && result['tag_nm'] && result['tag_nm'].length > 0) {
+          if (result['tag_id'] && result['tag_nm'] && result['tag_nm'].length > 0) {
             let tag: Tag = new Tag();
             tag.id = parseInt(result['tag_id']);
             tag.tagName = result['tag_nm'];
+            // console.log("getAllImageData - adding tag '" + tag.tagName + "' (tag_id=" + tag.id + ") to image:");
+            // console.log(imageData);
             imageData.addTag(tag);
           }
         }
+        console.log("getAllImageData - sending back map: ");
+        console.log(imageDataByPath);
         resolve(imageDataByPath);
       });
       let sql: string = "select img.id as image_id, full_path, file_name, file_path, t.id as tag_id, tag_nm ";
@@ -60,7 +66,9 @@ export class FileService {
       sql += "LEFT JOIN image_tag imgt on img.id = imgt.image_id ";
       sql += "LEFT JOIN tag t on imgt.tag_id = t.id ";
       sql += "order by full_path";
-      this.ipc.send("runSqlStatement", {sql: sql, args: null});
+      console.log("getAllImageData - sending SQL statement:");
+      console.log(sql);
+      this.ipc.send("runSqlStatement", {sql: sql, args: null, respondWith: "getAllImageDataResponse"});
     });
   }
 
@@ -96,7 +104,7 @@ export class FileService {
 
   async getTagsForImage(imageId: number) {
     return new Promise<Tag[]>((resolve, reject) => {
-      this.ipc.once("runSqlStatementResponse", (event, results) => {
+      this.ipc.once("getTagsForImageResponse", (event, results) => {
         let tags: Tag[] = [];
         for (let result of results) {
           //console.log("FileService.getTags - processing tagId=" + result['id'] + ", tagNm=" + result['tag_nm']);
@@ -108,11 +116,32 @@ export class FileService {
         resolve(tags);
       });
       //console.log("Sending message to main 'runSqlStatement'");
-      this.ipc.send("runSqlStatement", {sql: "select id, tag_nm from tag, image_tag where id = tag_id and image_id = ?", args: [imageId]});
+      this.ipc.send("runSqlStatement", {sql: "select id, tag_nm from tag, image_tag where id = tag_id and image_id = ?", args: [imageId], respondWith: "getTagsForImageResponse"});
     });
   }
 
-  
+  async deleteImageTags(imageId: number) {
+    return new Promise<Tag[]>((resolve, reject) => {
+      this.ipc.once("deleteImageTagsResponse", (event, results) => {
+        resolve(results.affectedRows);
+      });
+      this.ipc.send("runSqlStatement", {sql: "delete from image_tag where image_id = ?", args: [imageId], respondWith: "deleteImageTagsResponse"});
+    });
+  }
+
+  async saveImageTags(imageData: ImageData) {
+    return new Promise<Tag[]>((resolve, reject) => {
+      this.ipc.once("saveImageTagsResponse", (event, results) => {
+        resolve(results.message);
+      });
+      let insertStmt = "insert into image_tag (image_id, tag_id) values ";
+      for (let tag of imageData.tags) {
+        insertStmt += "(" + imageData.id + "," + tag.id + "),";
+      }
+      insertStmt = insertStmt.substring(0, insertStmt.length - 1)
+      this.ipc.send("runSqlStatement", {sql: insertStmt, args: null, respondWith: "saveImageTagsResponse"});
+    });
+  }
 
   async getTagId(tagName: string) {
     return new Promise<string>((resolve, reject) => {
@@ -180,7 +209,7 @@ export class FileService {
 
   async getTags() {
     return new Promise<Tag[]>((resolve, reject) => {
-      this.ipc.once("runSqlStatementResponse", (event, results) => {
+      this.ipc.once("getTagsResponse", (event, results) => {
         let tags: Tag[] = [];
         for (let result of results) {
           //console.log("FileService.getTags - processing tagId=" + result['id'] + ", tagNm=" + result['tag_nm']);
@@ -192,7 +221,7 @@ export class FileService {
         resolve(tags);
       });
       //console.log("Sending message to main 'runSqlStatement'");
-      this.ipc.send("runSqlStatement", {sql: "select id, tag_nm from tag", args: null});
+      this.ipc.send("runSqlStatement", {sql: "select id, tag_nm from tag order by tag_nm", args: null, respondWith: "getTagsResponse"});
     });
   }
 }
