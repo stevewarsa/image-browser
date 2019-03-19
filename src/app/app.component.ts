@@ -197,6 +197,7 @@ export class AppComponent implements OnInit {
               this.tags.forEach(tag => { 
                 this.shownTags[tag.tagName] = true;
               });
+              this.applyTags();
             } else {
               console.log("No tagId came back from fileService.saveImage");
             }
@@ -211,6 +212,7 @@ export class AppComponent implements OnInit {
     if (tagName) {
       this.tagFlags[tagName] = checked;
     }
+    this.applyTags();
   }
 
   private updateTagsOnCurrentImage() {

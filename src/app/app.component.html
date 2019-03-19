@@ -49,15 +49,15 @@
     <label class="mr-2" for="newtag">New Tag:</label>
     <input  (keyup)="filterItems($event)" class="mr-2" type="text" id="newtag" name="newtag" [(ngModel)]="newTag">
     <button type="button" (click)="addTag()" class="btn btn-primary mr-1">Add Tag</button>
-    <button type="button" (click)="applyTags()" class="btn btn-primary">Apply Tag Updates</button>
+    <!-- <button type="button" (click)="applyTags()" class="btn btn-primary">Apply Tag Updates</button> -->
   </div>
   <div class="row mb-2">
     <label [hidden]="!shownTags[tag.tagName]" *ngFor="let tag of tags" class="checkbox-inline">
       <input class="ml-2" type="checkbox" name="{{tag.tagName}}" [checked]="tagFlags[tag.tagName]" (change)="updateTagFromUI($event.target.checked, tag.tagName)" /> {{tag.tagName}}
     </label>
   </div>
-  <div class="row mb-2">
+  <!-- <div class="row mb-2">
     <button type="button" (click)="applyTags()" class="btn btn-primary">Apply Tag Updates</button>
-  </div>
+  </div> -->
 </div>
 <router-outlet></router-outlet>
