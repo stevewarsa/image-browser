@@ -135,17 +135,18 @@ export class AppComponent implements OnInit {
     if (this.newTag) {
       // the user has entered a new tag, so treat it as such - first try to look it up
       // just to make sure they didn't enter a duplicate one that already exists
-      this.fileService.getTagId(this.newTag).then((tagId: string) => {
+      let locTag = this.newTag;
+      this.fileService.getTagId(locTag).then((tagId: string) => {
         console.log("Finished getting tag, here is the response: ");
         console.log(tagId);
         if (!tagId) {
-          this.fileService.saveTag(this.newTag).then(tagId => {
+          this.fileService.saveTag(locTag).then(tagId => {
             console.log("Finished saving tag, here is the response: ");
             console.log(tagId);
             if (tagId) {
               let newTag: Tag = new Tag();
               newTag.id = parseInt(tagId);
-              newTag.tagName = this.newTag;
+              newTag.tagName = locTag;
               this.tags.push(newTag);
               this.tags.sort((a: Tag, b: Tag) => {
                 return a.tagName.toLowerCase().localeCompare(b.tagName.toLowerCase());

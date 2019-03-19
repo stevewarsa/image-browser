@@ -30,7 +30,8 @@
   <div class="row mb-2">
     <label class="mr-2" for="newtag">New Tag:</label>
     <input class="mr-2" type="text" id="newtag" name="newtag" [(ngModel)]="newTag">
-    <button type="button" (click)="addTag()" class="btn btn-primary">Add Tag</button>
+    <button type="button" (click)="addTag()" class="btn btn-primary mr-1">Add Tag</button>
+    <button type="button" (click)="applyTags()" class="btn btn-primary">Apply Tag Updates</button>
   </div>
   <div class="row mb-2" *ngFor="let tagRow of tagRows">
     <input class="mr-1" [hidden]="!tagRow[0]" type="checkbox" (change)="tagRow[0] ? updateTagFromUI($event.target.checked, tagRow[0].tagName) : updateTagFromUI($event.target.checked, null)" [checked]="tagRow[0] ? tagFlags[tagRow[0].tagName] : false"> {{tagRow[0]?.tagName}}
