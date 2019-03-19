@@ -2,7 +2,7 @@
   {{busyMessage}}<br>
   <img src="assets/ajax-loader.gif" />
 </div>
-<div *ngIf="!busy && imageDataArray && imageDataArray.length > 0" class="container">
+<div *ngIf="!busy && filteredImageDataArray && filteredImageDataArray.length > 0" class="container">
   <div class="btn-toolbar mb-3" role="toolbar" aria-label="Navigational controls">
     <div class="btn-group mr-3" role="group" aria-label="Historical Back">
         <button type="button" class="btn btn-secondary" (click)="back()">Last Viewed</button>
@@ -15,31 +15,46 @@
     <div class="btn-group mr-3" role="group" aria-label="Other commands">
       <button type="button" class="btn btn-primary m-1" (click)="copyImageToClipboard()"><i class="fa fa-clipboard"></i> Copy Image</button>
       <button type="button" class="btn btn-primary m-1" (click)="openImageInApp()"><i class="fa fa-open"></i> Open Image</button>
+      <button [hidden]="showForm" (click)="viewForm()" type="button" class="btn btn-secondary m-1"><i class="fa fa-plus-square"></i> Show Filters</button>
+      <button [hidden]="!showForm" (click)="showForm = false" type="button" class="btn btn-secondary m-1"><i class="fa fa-minus-square-o"></i> Hide Filters</button>
+    </div>
+  </div>
+  <form [hidden]="!showForm" class="mr-3 mb-2">
+    <div class="form-group">
+      <label class="radio-inline"> 
+        <input type="radio" name="filter_mode" value="any" [(ngModel)]="filterMode"> ANY
+      </label>
+      <label class="radio-inline"> 
+        <input class="ml-2" type="radio" name="filter_mode" value="all" [(ngModel)]="filterMode"> ALL
+      </label>
+    </div>
+    <div class="form-group">
+      <label *ngFor="let tag of tags" class="checkbox-inline">
+        <input class="ml-2" type="checkbox" name="{{tag.tagName}}" (change)="selectTagForFilter($event.target.checked, tag.tagName)" [checked]="filterTags[tag.tagName]" /> {{tag.tagName}}
+      </label>
+    </div>
+    <button type="button" (click)="filterImages()" class="btn btn-primary"><i class="fa fa-filter"></i> Apply Filter</button>
+  </form>
+  <div class="row">
+    <div class="col">
+      <img style="max-width: 100%; min-height: 600px; max-height: 600px;" src="file:///{{filteredImageDataArray[currentIndex].fullPath}}">
     </div>
   </div>
   <div class="row">
     <div class="col">
-      <img style="max-width: 100%; min-height: 600px; max-height: 600px;" src="file:///{{imageDataArray[currentIndex].fullPath}}">
-    </div>
-  </div>
-  <div class="row">
-    <div class="col">
-      (index={{(currentIndex + 1)}}) File Path: {{imageDataArray[currentIndex].fullPath}}
+      (index={{(currentIndex + 1)}} of {{filteredImageDataArray.length}}) File Path: {{filteredImageDataArray[currentIndex].fullPath}}
     </div>
   </div>
   <div class="row mb-2">
     <label class="mr-2" for="newtag">New Tag:</label>
-    <input class="mr-2" type="text" id="newtag" name="newtag" [(ngModel)]="newTag">
+    <input  (keyup)="filterItems($event)" class="mr-2" type="text" id="newtag" name="newtag" [(ngModel)]="newTag">
     <button type="button" (click)="addTag()" class="btn btn-primary mr-1">Add Tag</button>
     <button type="button" (click)="applyTags()" class="btn btn-primary">Apply Tag Updates</button>
   </div>
-  <div class="row mb-2" *ngFor="let tagRow of tagRows">
-    <input class="mr-1" [hidden]="!tagRow[0]" type="checkbox" (change)="tagRow[0] ? updateTagFromUI($event.target.checked, tagRow[0].tagName) : updateTagFromUI($event.target.checked, null)" [checked]="tagRow[0] ? tagFlags[tagRow[0].tagName] : false"> {{tagRow[0]?.tagName}}
-    <input class="mr-1" [hidden]="!tagRow[1]" type="checkbox" (change)="tagRow[1] ? updateTagFromUI($event.target.checked, tagRow[1].tagName) : updateTagFromUI($event.target.checked, null)" [checked]="tagRow[1] ? tagFlags[tagRow[1].tagName] : false"> {{tagRow[1]?.tagName}}
-    <input class="mr-1" [hidden]="!tagRow[2]" type="checkbox" (change)="tagRow[2] ? updateTagFromUI($event.target.checked, tagRow[2].tagName) : updateTagFromUI($event.target.checked, null)" [checked]="tagRow[2] ? tagFlags[tagRow[2].tagName] : false"> {{tagRow[2]?.tagName}}
-    <input class="mr-1" [hidden]="!tagRow[3]" type="checkbox" (change)="tagRow[3] ? updateTagFromUI($event.target.checked, tagRow[3].tagName) : updateTagFromUI($event.target.checked, null)" [checked]="tagRow[3] ? tagFlags[tagRow[3].tagName] : false"> {{tagRow[3]?.tagName}}
-    <input class="mr-1" [hidden]="!tagRow[4]" type="checkbox" (change)="tagRow[4] ? updateTagFromUI($event.target.checked, tagRow[4].tagName) : updateTagFromUI($event.target.checked, null)" [checked]="tagRow[4] ? tagFlags[tagRow[4].tagName] : false"> {{tagRow[4]?.tagName}}
-    <input [hidden]="!tagRow[5]" type="checkbox" (change)="tagRow[5] ? updateTagFromUI($event.target.checked, tagRow[5].tagName) : updateTagFromUI($event.target.checked, null)" [checked]="tagRow[5] ? tagFlags[tagRow[5].tagName] : false"> {{tagRow[5]?.tagName}}
+  <div class="row mb-2">
+    <label [hidden]="!shownTags[tag.tagName]" *ngFor="let tag of tags" class="checkbox-inline">
+      <input class="ml-2" type="checkbox" name="{{tag.tagName}}" [checked]="tagFlags[tag.tagName]" (change)="updateTagFromUI($event.target.checked, tag.tagName)" /> {{tag.tagName}}
+    </label>
   </div>
   <div class="row mb-2">
     <button type="button" (click)="applyTags()" class="btn btn-primary">Apply Tag Updates</button>

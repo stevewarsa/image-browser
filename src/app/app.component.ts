@@ -9,7 +9,6 @@ import { Tag } from './tag';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
-  title = "Image Browser";
   busy: boolean = true;
   busyMessage: string = null;
   currentIndex: number = -1;
@@ -18,9 +17,14 @@ export class AppComponent implements OnInit {
   currentMetaData: ImageData = null;
   newTag: string = null;
   tags: Tag[] = [];
-  tagRows: Tag[][] = [];
   imageDataArray: ImageData[] = [];
+  filteredImageDataArray: ImageData[] = [];
   tagFlags: {[tagName:string]: boolean} = {};
+  filterTags: {[tagName:string]: boolean} = {};
+  filterMode: string = "any"; 
+  showForm: boolean = false;
+  shownTags: {[tagName:string]: boolean} = {};
+  filterImageFlags: {[tagName:string]: boolean} = {};
 
   constructor(private fileService: FileService) { }
 
@@ -36,8 +40,6 @@ export class AppComponent implements OnInit {
       results[0].forEach(tg => {
         this.tags.push(tg);
       });
-      let tmpTags = results[0];
-      this.createTagRows(tmpTags);
       let allImageData: {[fullPath:string]: ImageData} = results[1];
       let files: string[] = results[2];
       let filesFound = files.filter(
@@ -58,35 +60,73 @@ export class AppComponent implements OnInit {
         }
         this.imageDataArray.push(img);
       });
-      this.imageDataArray
+      // creat a shallow copy of this array, so that we can use it for filtering
+      this.filteredImageDataArray = this.imageDataArray.slice();
+      this.tags.forEach(tag => { 
+        this.shownTags[tag.tagName] = true;
+      });
+  
       this.next();
       this.busy = false;
       this.busyMessage = null;
     });
   }
 
-  private createTagRows(tmpTags: any) {
-    this.tagRows = [];
-    while (tmpTags.length > 0) {
-      let subArray = tmpTags.splice(0, 6);
-      this.tagRows.push(subArray);
+  viewForm() {
+    this.showForm = true;
+  }
+
+  filterItems(event: any) {
+    let searchString = event.target.value.toUpperCase();
+    Object.keys(this.shownTags).map((key, index) => {
+        this.shownTags[key] = key.toUpperCase().includes(searchString); 
+    });
+  }
+
+  filterImages() {
+    let numberChecked: number = Object.keys(this.filterImageFlags).filter(key => this.filterImageFlags[key]).length;
+    let anyChecked: boolean =  numberChecked > 0;
+    if (!anyChecked) {
+      console.log("Nothing checked for filter - resetting filteredImageDataArray and returning");
+      this.filteredImageDataArray = this.imageDataArray.slice();
+      this.showForm = false;
+      this.currentIndex = -1;
+      this.next();
+      return;
+    } else {
+      console.log("There are " + numberChecked + " tags checked for filter");
     }
+    this.filteredImageDataArray = this.imageDataArray.filter((img: ImageData) => {
+      for (let tag of img.tags) {
+        if (this.filterImageFlags[tag.tagName]) {
+          return img;
+        }
+      }
+    });
+    this.showForm = false;
+    this.currentIndex = -1;
+    this.next();
+  }
+
+  selectTagForFilter(checked: boolean, tagName: string) {
+    console.log("Setting tag " + tagName + " to " + (checked ? "Selected" : "Unselected") + "...");
+    this.filterImageFlags[tagName] = checked;
   }
 
   doRandom() {
-    let randNum: number = Math.floor(Math.random() * (this.imageDataArray.length - 1));
+    let randNum: number = Math.floor(Math.random() * (this.filteredImageDataArray.length - 1));
     this.lastIndexes.push(this.currentIndex);
     this.currentLastViewedIndexInLastIndexes = this.lastIndexes.length - 1;
     this.currentIndex = randNum;
-    this.currentMetaData = this.imageDataArray[this.currentIndex];
+    this.currentMetaData = this.filteredImageDataArray[this.currentIndex];
     this.updateFlags();
   }
 
   next() {
     this.lastIndexes.push(this.currentIndex);
     this.currentLastViewedIndexInLastIndexes = this.lastIndexes.length - 1;
-    this.currentIndex === (this.imageDataArray.length - 1) ? this.currentIndex = 0 : this.currentIndex = this.currentIndex + 1;
-    this.currentMetaData = this.imageDataArray[this.currentIndex];
+    this.currentIndex === (this.filteredImageDataArray.length - 1) ? this.currentIndex = 0 : this.currentIndex = this.currentIndex + 1;
+    this.currentMetaData = this.filteredImageDataArray[this.currentIndex];
     this.updateFlags();
   }
 
@@ -107,26 +147,26 @@ export class AppComponent implements OnInit {
     if (this.currentLastViewedIndexInLastIndexes > 0) {
       this.currentLastViewedIndexInLastIndexes -= 1;
     }
-    this.currentMetaData = this.imageDataArray[this.currentIndex];
+    this.currentMetaData = this.filteredImageDataArray[this.currentIndex];
     this.updateFlags();
   }
 
   prev() {
     this.lastIndexes.push(this.currentIndex);
     this.currentLastViewedIndexInLastIndexes = this.lastIndexes.length - 1;
-    this.currentIndex === 0 ? this.currentIndex = this.imageDataArray.length - 1 : this.currentIndex = this.currentIndex - 1;
-    this.currentMetaData = this.imageDataArray[this.currentIndex];
+    this.currentIndex === 0 ? this.currentIndex = this.filteredImageDataArray.length - 1 : this.currentIndex = this.currentIndex - 1;
+    this.currentMetaData = this.filteredImageDataArray[this.currentIndex];
     this.updateFlags();
   }
 
   copyImageToClipboard() {
-    this.fileService.copyImageToClipboard(this.imageDataArray[this.currentIndex].fullPath).then((response: string) => {
+    this.fileService.copyImageToClipboard(this.filteredImageDataArray[this.currentIndex].fullPath).then((response: string) => {
       console.log("Response from copying image: " + response);
     });
   }
 
   openImageInApp() {
-    this.fileService.openImageInApp(this.imageDataArray[this.currentIndex].fullPath).then((response: string) => {
+    this.fileService.openImageInApp(this.filteredImageDataArray[this.currentIndex].fullPath).then((response: string) => {
       console.log("Response from opening image: " + response);
     });
   }
@@ -151,10 +191,12 @@ export class AppComponent implements OnInit {
               this.tags.sort((a: Tag, b: Tag) => {
                 return a.tagName.toLowerCase().localeCompare(b.tagName.toLowerCase());
               });
-              // slice() creates a shallow copy of the array
-              this.createTagRows(this.tags.slice());
               // now make sure the new tag shows up as checked
               this.tagFlags[newTag.tagName] = true;
+              this.newTag = null;
+              this.tags.forEach(tag => { 
+                this.shownTags[tag.tagName] = true;
+              });
             } else {
               console.log("No tagId came back from fileService.saveImage");
             }
@@ -162,7 +204,6 @@ export class AppComponent implements OnInit {
         }
       });
     }
-    this.newTag = null;
   }
 
   updateTagFromUI(checked, tagName: string) {
@@ -209,6 +250,10 @@ export class AppComponent implements OnInit {
       // remove existing image tag records
       this.deleteImageTags();
     }
+    this.newTag = null;
+    this.tags.forEach(tag => { 
+      this.shownTags[tag.tagName] = true;
+    });
   }
 
   private deleteImageTags() {
