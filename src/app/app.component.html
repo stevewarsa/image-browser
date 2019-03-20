@@ -27,9 +27,10 @@
       <label class="radio-inline"> 
         <input class="ml-2" type="radio" name="filter_mode" value="all" [(ngModel)]="filterMode"> ALL
       </label>
+      <input (keyup)="filterTagsForFilter($event)" class="m-2" type="text" id="filtertagsforfilter" name="filtertagsforfilter">
     </div>
     <div class="form-group">
-      <label *ngFor="let tag of tags" class="checkbox-inline">
+      <label [hidden]="!shownTagsForFilterTags[tag.tagName]" *ngFor="let tag of tags" class="checkbox-inline">
         <input class="ml-2" type="checkbox" name="{{tag.tagName}}" (change)="selectTagForFilter($event.target.checked, tag.tagName)" [checked]="filterTags[tag.tagName]" /> {{tag.tagName}}
       </label>
     </div>

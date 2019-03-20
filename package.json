@@ -1,6 +1,7 @@
 {
   "name": "image-browser",
-  "version": "0.0.0",
+  "productName": "Image Browser",
+  "version": "1.0.0",
   "main": "electron/dist/electron/main.js",
   "scripts": {
     "ng": "ng",
@@ -10,7 +11,8 @@
     "lint": "ng lint",
     "e2e": "ng e2e",
     "electron": "ng build && tsc --p electron && electron .",
-    "electron-aot": "ng build --prod && electron ."
+    "electron-aot": "ng build --prod && electron .",
+    "package-win": "electron-packager . image-browser --overwrite --asar=true --platform=win32 --arch=ia32 --prune=true --out=release-builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"Image Browser\""
   },
   "private": true,
   "dependencies": {
@@ -46,6 +48,7 @@
     "@types/node": "~8.9.4",
     "codelyzer": "~4.5.0",
     "electron": "^4.0.6",
+    "electron-packager": "^13.1.1",
     "jasmine-core": "~2.99.1",
     "jasmine-spec-reporter": "~4.2.1",
     "karma": "~3.1.1",

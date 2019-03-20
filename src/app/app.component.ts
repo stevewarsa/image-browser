@@ -24,6 +24,7 @@ export class AppComponent implements OnInit {
   filterMode: string = "any"; 
   showForm: boolean = false;
   shownTags: {[tagName:string]: boolean} = {};
+  shownTagsForFilterTags: {[tagName:string]: boolean} = {};
   filterImageFlags: {[tagName:string]: boolean} = {};
 
   constructor(private fileService: FileService) { }
@@ -65,7 +66,10 @@ export class AppComponent implements OnInit {
       this.tags.forEach(tag => { 
         this.shownTags[tag.tagName] = true;
       });
-  
+      this.tags.forEach(tag => { 
+        this.shownTagsForFilterTags[tag.tagName] = true;
+      });
+      
       this.next();
       this.busy = false;
       this.busyMessage = null;
@@ -80,6 +84,13 @@ export class AppComponent implements OnInit {
     let searchString = event.target.value.toUpperCase();
     Object.keys(this.shownTags).map((key, index) => {
         this.shownTags[key] = key.toUpperCase().includes(searchString); 
+    });
+  }
+
+  filterTagsForFilter(event: any) {
+    let searchString = event.target.value.toUpperCase();
+    Object.keys(this.shownTagsForFilterTags).map((key, index) => {
+        this.shownTagsForFilterTags[key] = key.toUpperCase().includes(searchString); 
     });
   }
 
