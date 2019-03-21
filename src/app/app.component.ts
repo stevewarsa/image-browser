@@ -116,7 +116,6 @@ export class AppComponent implements OnInit {
   }
 
   clearFilters() {
-    this.filteredImageDataArray = this.imageDataArray.slice();
     this.tags.forEach(tag => { 
       if (this.filterImageFlags[tag.tagName]) {
         console.log("Clearing image filter for tag: " + tag.tagName);
@@ -124,6 +123,7 @@ export class AppComponent implements OnInit {
       this.filterImageFlags[tag.tagName] = false;
       this.filterTags[tag.tagName] = false;
     });
+    this.filteredImageDataArray = this.imageDataArray.slice();
     this.currentIndex = -1;
     this.next();
   }
