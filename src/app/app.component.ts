@@ -17,6 +17,7 @@ export class AppComponent implements OnInit {
   currentMetaData: ImageData = null;
   newTag: string = null;
   tags: Tag[] = [];
+  tagNames: string[] = [];
   imageDataArray: ImageData[] = [];
   filteredImageDataArray: ImageData[] = [];
   tagFlags: {[tagName:string]: boolean} = {};
@@ -65,9 +66,8 @@ export class AppComponent implements OnInit {
       this.filteredImageDataArray = this.imageDataArray.slice();
       this.tags.forEach(tag => { 
         this.shownTags[tag.tagName] = true;
-      });
-      this.tags.forEach(tag => { 
         this.shownTagsForFilterTags[tag.tagName] = true;
+        this.tagNames.push(tag.tagName.toUpperCase());
       });
       
       this.next();
@@ -81,7 +81,7 @@ export class AppComponent implements OnInit {
   }
 
   filterItems(event: any) {
-    let searchString = event.target.value.toUpperCase();
+    let searchString = event.target.value.toUpperCase().trim();
     Object.keys(this.shownTags).map((key, index) => {
         this.shownTags[key] = key.toUpperCase().includes(searchString); 
     });

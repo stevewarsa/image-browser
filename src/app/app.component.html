@@ -48,8 +48,8 @@
   </div>
   <div class="row mb-2">
     <label class="mr-2" for="newtag">New Tag:</label>
-    <input  (keyup)="filterItems($event)" class="mr-2" type="text" id="newtag" name="newtag" [(ngModel)]="newTag">
-    <button type="button" (click)="addTag()" class="btn btn-primary mr-1">Add Tag</button>
+    <input (keyup)="filterItems($event)" class="mr-2" type="text" id="newtag" name="newtag" [(ngModel)]="newTag">
+    <button [disabled]="newTag === null || newTag.trim() === '' || tagNames.includes(newTag.trim().toUpperCase())" type="button" (click)="addTag()" class="btn btn-primary mr-1">Add Tag</button>
     <!-- <button type="button" (click)="applyTags()" class="btn btn-primary">Apply Tag Updates</button> -->
   </div>
   <div class="row mb-2">
