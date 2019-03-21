@@ -1,10 +1,11 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var electron_1 = require("electron");
 var path = require("path");
 var url = require("url");
 var fs = require("fs");
 var database_1 = require("./database");
-var image_data_1 = require('./../src/app/image-data');
+var image_data_1 = require("./../src/app/image-data");
 var win;
 var executeDb = function (callback) {
     var database = new database_1.Database();
@@ -24,7 +25,7 @@ function createWindow() {
         slashes: true
     }));
     win.setMenu(null);
-    //win.webContents.openDevTools();
+    win.webContents.openDevTools();
     win.maximize();
     win.on("closed", function () {
         win = null;

@@ -1,5 +1,6 @@
 "use strict";
-var ImageData = (function () {
+Object.defineProperty(exports, "__esModule", { value: true });
+var ImageData = /** @class */ (function () {
     function ImageData() {
         this.id = -1;
         this.fullPath = null;

@@ -1,6 +1,7 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var mysql = require("mysql");
-var Database = (function () {
+var Database = /** @class */ (function () {
     function Database() {
         this.connection = null;
         this.connection = mysql.createConnection({
