@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { FileService } from './file.service';
 import { ImageData } from './image-data';
 import { Tag } from './tag';
@@ -27,7 +27,7 @@ export class AppComponent implements OnInit {
   shownTags: {[tagName:string]: boolean} = {};
   shownTagsForFilterTags: {[tagName:string]: boolean} = {};
   filterImageFlags: {[tagName:string]: boolean} = {};
-
+  @ViewChild('tagInput') tagInput: ElementRef;
   constructor(private fileService: FileService) { }
 
   ngOnInit() {
@@ -76,10 +76,6 @@ export class AppComponent implements OnInit {
     });
   }
 
-  viewForm() {
-    this.showForm = true;
-  }
-
   filterItems(event: any) {
     let searchString = event.target.value.toUpperCase().trim();
     Object.keys(this.shownTags).map((key, index) => {
@@ -88,7 +84,7 @@ export class AppComponent implements OnInit {
   }
 
   filterTagsForFilter(event: any) {
-    let searchString = event.target.value.toUpperCase();
+    let searchString = event.target.value.toUpperCase().trim();
     Object.keys(this.shownTagsForFilterTags).map((key, index) => {
         this.shownTagsForFilterTags[key] = key.toUpperCase().includes(searchString); 
     });
@@ -119,6 +115,19 @@ export class AppComponent implements OnInit {
     this.next();
   }
 
+  clearFilters() {
+    this.filteredImageDataArray = this.imageDataArray.slice();
+    this.tags.forEach(tag => { 
+      if (this.filterImageFlags[tag.tagName]) {
+        console.log("Clearing image filter for tag: " + tag.tagName);
+      }
+      this.filterImageFlags[tag.tagName] = false;
+      this.filterTags[tag.tagName] = false;
+    });
+    this.currentIndex = -1;
+    this.next();
+  }
+
   selectTagForFilter(checked: boolean, tagName: string) {
     console.log("Setting tag " + tagName + " to " + (checked ? "Selected" : "Unselected") + "...");
     this.filterImageFlags[tagName] = checked;
@@ -130,7 +139,7 @@ export class AppComponent implements OnInit {
     this.currentLastViewedIndexInLastIndexes = this.lastIndexes.length - 1;
     this.currentIndex = randNum;
     this.currentMetaData = this.filteredImageDataArray[this.currentIndex];
-    this.updateFlags();
+    this.updateUiAfterNavigate();
   }
 
   next() {
@@ -138,10 +147,10 @@ export class AppComponent implements OnInit {
     this.currentLastViewedIndexInLastIndexes = this.lastIndexes.length - 1;
     this.currentIndex === (this.filteredImageDataArray.length - 1) ? this.currentIndex = 0 : this.currentIndex = this.currentIndex + 1;
     this.currentMetaData = this.filteredImageDataArray[this.currentIndex];
-    this.updateFlags();
+    this.updateUiAfterNavigate();
   }
 
-  private updateFlags() {
+  private updateUiAfterNavigate() {
     this.tags.forEach(tag => { 
       this.tagFlags[tag.tagName] = false;
     });
@@ -151,6 +160,13 @@ export class AppComponent implements OnInit {
         this.tagFlags[tag.tagName] = true;
       }
     }
+    this.focusTagInput();
+  }
+
+  private focusTagInput() {
+    setTimeout(() => {
+      this.tagInput.nativeElement.focus();
+    }, 100);
   }
 
   back() {
@@ -159,7 +175,7 @@ export class AppComponent implements OnInit {
       this.currentLastViewedIndexInLastIndexes -= 1;
     }
     this.currentMetaData = this.filteredImageDataArray[this.currentIndex];
-    this.updateFlags();
+    this.updateUiAfterNavigate();
   }
 
   prev() {
@@ -167,7 +183,7 @@ export class AppComponent implements OnInit {
     this.currentLastViewedIndexInLastIndexes = this.lastIndexes.length - 1;
     this.currentIndex === 0 ? this.currentIndex = this.filteredImageDataArray.length - 1 : this.currentIndex = this.currentIndex - 1;
     this.currentMetaData = this.filteredImageDataArray[this.currentIndex];
-    this.updateFlags();
+    this.updateUiAfterNavigate();
   }
 
   copyImageToClipboard() {
@@ -216,6 +232,7 @@ export class AppComponent implements OnInit {
         }
       });
     }
+    this.focusTagInput();
   }
 
   updateTagFromUI(checked, tagName: string) {
@@ -227,6 +244,7 @@ export class AppComponent implements OnInit {
   }
 
   private updateTagsOnCurrentImage() {
+    // first clear the existing tags on the image
     this.currentMetaData.tags = [];
     // first go through selected tags and make sure this object is updated
     for (let tagName of Object.keys(this.tagFlags)) {
@@ -241,7 +259,6 @@ export class AppComponent implements OnInit {
   }
 
   applyTags() {
-    // first clear the existing tags on the image
     this.updateTagsOnCurrentImage();
     if (this.currentMetaData.id === -1) {
       // the currently displayed image either has not been looked up yet, or
@@ -267,6 +284,7 @@ export class AppComponent implements OnInit {
     this.tags.forEach(tag => { 
       this.shownTags[tag.tagName] = true;
     });
+    this.focusTagInput();
   }
 
   private deleteImageTags() {

@@ -15,8 +15,15 @@
     <div class="btn-group mr-3" role="group" aria-label="Other commands">
       <button type="button" class="btn btn-primary m-1" (click)="copyImageToClipboard()"><i class="fa fa-clipboard"></i> Copy Image</button>
       <button type="button" class="btn btn-primary m-1" (click)="openImageInApp()"><i class="fa fa-open"></i> Open Image</button>
-      <button [hidden]="showForm" (click)="viewForm()" type="button" class="btn btn-secondary m-1"><i class="fa fa-plus-square"></i> Show Filters</button>
+      <button [hidden]="showForm" (click)="showForm = true" type="button" class="btn btn-secondary m-1"><i class="fa fa-plus-square"></i> Show Filters</button>
       <button [hidden]="!showForm" (click)="showForm = false" type="button" class="btn btn-secondary m-1"><i class="fa fa-minus-square-o"></i> Hide Filters</button>
+      <button [hidden]="filteredImageDataArray?.length === imageDataArray?.length" (click)="clearFilters()" type="button" class="btn btn-info m-1">
+        <span class="fa-stack fa-2x">
+          <i class="fa fa-filter fa-stack-1x"></i>
+          <i class="fa fa-ban fa-stack-2x" style="color:Tomato"></i>
+        </span> 
+        Clear Filters
+      </button>
     </div>
   </div>
   <form [hidden]="!showForm" class="mr-3 mb-2">
@@ -48,17 +55,13 @@
   </div>
   <div class="row mb-2">
     <label class="mr-2" for="newtag">New Tag:</label>
-    <input (keyup)="filterItems($event)" class="mr-2" type="text" id="newtag" name="newtag" [(ngModel)]="newTag">
+    <input #tagInput (keyup)="filterItems($event)" class="mr-2" type="text" id="newtag" name="newtag" [(ngModel)]="newTag">
     <button [disabled]="newTag === null || newTag.trim() === '' || tagNames.includes(newTag.trim().toUpperCase())" type="button" (click)="addTag()" class="btn btn-primary mr-1">Add Tag</button>
-    <!-- <button type="button" (click)="applyTags()" class="btn btn-primary">Apply Tag Updates</button> -->
   </div>
   <div class="row mb-2">
     <label [hidden]="!shownTags[tag.tagName]" *ngFor="let tag of tags" class="checkbox-inline">
       <input class="ml-2" type="checkbox" name="{{tag.tagName}}" [checked]="tagFlags[tag.tagName]" (change)="updateTagFromUI($event.target.checked, tag.tagName)" /> {{tag.tagName}}
     </label>
   </div>
-  <!-- <div class="row mb-2">
-    <button type="button" (click)="applyTags()" class="btn btn-primary">Apply Tag Updates</button>
-  </div> -->
 </div>
 <router-outlet></router-outlet>
