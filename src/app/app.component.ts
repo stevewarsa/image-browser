@@ -22,12 +22,13 @@ export class AppComponent implements OnInit {
   filteredImageDataArray: ImageData[] = [];
   tagFlags: {[tagName:string]: boolean} = {};
   filterTags: {[tagName:string]: boolean} = {};
-  filterMode: string = "any"; 
+  filterMode: string = "all"; 
   showForm: boolean = false;
   shownTags: {[tagName:string]: boolean} = {};
   shownTagsForFilterTags: {[tagName:string]: boolean} = {};
   filterImageFlags: {[tagName:string]: boolean} = {};
   @ViewChild('tagInput') tagInput: ElementRef;
+  @ViewChild('filterTagInputInForm') filterTagInputInForm: ElementRef;
   constructor(private fileService: FileService) { }
 
   ngOnInit() {
@@ -83,15 +84,16 @@ export class AppComponent implements OnInit {
     });
   }
 
-  filterTagsForFilter(event: any) {
-    let searchString = event.target.value.toUpperCase().trim();
+  filterTagsForFilter(value: any) {
+    let searchString = value.toUpperCase().trim();
     Object.keys(this.shownTagsForFilterTags).map((key, index) => {
         this.shownTagsForFilterTags[key] = key.toUpperCase().includes(searchString); 
     });
   }
 
   filterImages() {
-    let numberChecked: number = Object.keys(this.filterImageFlags).filter(key => this.filterImageFlags[key]).length;
+    let checkedTags: string[] = Object.keys(this.filterImageFlags).filter(key => this.filterImageFlags[key]);
+    let numberChecked: number = checkedTags.length;
     let anyChecked: boolean =  numberChecked > 0;
     if (!anyChecked) {
       console.log("Nothing checked for filter - resetting filteredImageDataArray and returning");
@@ -104,9 +106,28 @@ export class AppComponent implements OnInit {
       console.log("There are " + numberChecked + " tags checked for filter");
     }
     this.filteredImageDataArray = this.imageDataArray.filter((img: ImageData) => {
-      for (let tag of img.tags) {
-        if (this.filterImageFlags[tag.tagName]) {
+      if (this.filterMode === "all") {
+        let matchedAll: boolean = true;
+        // go through each of the tags that have been selected for 
+        // filter. If the current image doesn't include each and 
+        // every tag, it is considered "not matched".
+        for (let tag of checkedTags) {
+          if (!img.tags.map(tg => tg.tagName).includes(tag)) {
+            matchedAll = false;
+            break;
+          }
+        }
+        // only if the current image matched all tags, do we return it
+        if (matchedAll) {
           return img;
+        }
+      } else {
+        // filter mode is assumed to be "any", so it only needs to match one 
+        // of the selected tags in order to be returned
+        for (let tag of img.tags) {
+          if (this.filterImageFlags[tag.tagName]) {
+            return img;
+          }
         }
       }
     });
@@ -131,6 +152,20 @@ export class AppComponent implements OnInit {
   selectTagForFilter(checked: boolean, tagName: string) {
     console.log("Setting tag " + tagName + " to " + (checked ? "Selected" : "Unselected") + "...");
     this.filterImageFlags[tagName] = checked;
+    this.filterTagInputInForm.nativeElement.value = "";
+    this.filterTagsForFilter("");
+    this.focusFilterTagInFormInput();
+  }
+
+  viewForm() {
+    this.showForm = true;
+    this.focusFilterTagInFormInput();
+  }
+
+  focusFilterTagInFormInput() {
+    setTimeout(() => {
+      this.filterTagInputInForm.nativeElement.focus();
+    }, 300);
   }
 
   doRandom() {

@@ -15,7 +15,7 @@
     <div class="btn-group mr-3" role="group" aria-label="Other commands">
       <button type="button" class="btn btn-primary m-1" (click)="copyImageToClipboard()"><i class="fa fa-clipboard"></i> Copy Image</button>
       <button type="button" class="btn btn-primary m-1" (click)="openImageInApp()"><i class="fa fa-open"></i> Open Image</button>
-      <button [hidden]="showForm" (click)="showForm = true" type="button" class="btn btn-secondary m-1"><i class="fa fa-plus-square"></i> Show Filters</button>
+      <button [hidden]="showForm" (click)="viewForm()" type="button" class="btn btn-secondary m-1"><i class="fa fa-plus-square"></i> Show Filters</button>
       <button [hidden]="!showForm" (click)="showForm = false" type="button" class="btn btn-secondary m-1"><i class="fa fa-minus-square-o"></i> Hide Filters</button>
       <button [hidden]="filteredImageDataArray?.length === imageDataArray?.length" (click)="clearFilters()" type="button" class="btn btn-info m-1">
         <span class="fa-stack fa-2x">
@@ -34,11 +34,11 @@
       <label class="radio-inline"> 
         <input class="ml-2" type="radio" name="filter_mode" value="all" [(ngModel)]="filterMode"> ALL
       </label>
-      <input (keyup)="filterTagsForFilter($event)" class="m-2" type="text" id="filtertagsforfilter" name="filtertagsforfilter">
+      <input #filterTagInputInForm (keyup)="filterTagsForFilter($event.target.value)" class="m-2" type="text" id="filtertagsforfilter" name="filtertagsforfilter">
     </div>
     <div class="form-group">
       <label [hidden]="!shownTagsForFilterTags[tag.tagName]" *ngFor="let tag of tags" class="checkbox-inline">
-        <input class="ml-2" type="checkbox" name="{{tag.tagName}}" (change)="selectTagForFilter($event.target.checked, tag.tagName)" [checked]="filterTags[tag.tagName]" /> {{tag.tagName}}
+        <input class="ml-2" type="checkbox" name="{{tag.tagName}}" (change)="selectTagForFilter($event.target.checked, tag.tagName)" [checked]="filterImageFlags[tag.tagName]" /> {{tag.tagName}}
       </label>
     </div>
     <button type="button" (click)="filterImages()" class="btn btn-primary"><i class="fa fa-filter"></i> Apply Filter</button>

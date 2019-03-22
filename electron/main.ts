@@ -35,7 +35,7 @@ function createWindow() {
 
   win.setMenu(null);
 
-  win.webContents.openDevTools();
+  //win.webContents.openDevTools();
   win.maximize();
 
   win.on("closed", () => {
