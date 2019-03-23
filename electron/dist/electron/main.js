@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var electron_1 = require("electron");
+var exif_1 = require("exif");
 var path = require("path");
 var url = require("url");
 var fs = require("fs");
@@ -25,12 +26,30 @@ function createWindow() {
         slashes: true
     }));
     win.setMenu(null);
-    win.webContents.openDevTools();
+    //win.webContents.openDevTools();
     win.maximize();
     win.on("closed", function () {
         win = null;
     });
 }
+electron_1.ipcMain.on("getImageDetails", function (event, arg) {
+    //var ExifImage = require('exif').ExifImage;
+    console.log('getImageDetails: file=' + arg);
+    try {
+        new exif_1.ExifImage({ image: arg }, function (error, exifData) {
+            if (error) {
+                console.log('Error: ' + error.message);
+            }
+            else {
+                console.log(exifData); // Do something with your data!
+                win.webContents.send("getImageDetailsResponse", exifData);
+            }
+        });
+    }
+    catch (error) {
+        console.log('Error: ' + error.message);
+    }
+});
 electron_1.ipcMain.on("openImageInApp", function (event, arg) {
     electron_1.shell.openItem(arg);
     win.webContents.send("openImageInAppResponse", "Image successfully opened!");

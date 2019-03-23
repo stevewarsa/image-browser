@@ -15,6 +15,7 @@ export class AppComponent implements OnInit {
   lastIndexes: number[] = [0];
   currentLastViewedIndexInLastIndexes: number = 0;
   currentMetaData: ImageData = null;
+  currentPictureDateTaken: string = null;
   newTag: string = null;
   tags: Tag[] = [];
   tagNames: string[] = [];
@@ -29,6 +30,7 @@ export class AppComponent implements OnInit {
   filterImageFlags: {[tagName:string]: boolean} = {};
   @ViewChild('tagInput') tagInput: ElementRef;
   @ViewChild('filterTagInputInForm') filterTagInputInForm: ElementRef;
+
   constructor(private fileService: FileService) { }
 
   ngOnInit() {
@@ -162,6 +164,13 @@ export class AppComponent implements OnInit {
     this.focusFilterTagInFormInput();
   }
 
+  getImageDetails() {
+    this.fileService.getImageDetails(this.filteredImageDataArray[this.currentIndex].fullPath).then(response => {
+      console.log("AppComponent.getImageDetails - response: ");
+      console.log(response);
+    })
+  }
+
   focusFilterTagInFormInput() {
     setTimeout(() => {
       this.filterTagInputInForm.nativeElement.focus();
@@ -195,6 +204,14 @@ export class AppComponent implements OnInit {
         this.tagFlags[tag.tagName] = true;
       }
     }
+    this.currentPictureDateTaken = "N/A";
+    this.fileService.getImageDetails(this.filteredImageDataArray[this.currentIndex].fullPath).then(response => {
+      if (response && response.exif) {
+        this.currentPictureDateTaken = response.exif.DateTimeOriginal;
+      } else {
+        this.currentPictureDateTaken = "N/A";
+      }
+    });
     this.focusTagInput();
   }
 

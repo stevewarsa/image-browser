@@ -15,6 +15,7 @@
     <div class="btn-group mr-3" role="group" aria-label="Other commands">
       <button type="button" class="btn btn-primary m-1" (click)="copyImageToClipboard()"><i class="fa fa-clipboard"></i> Copy Image</button>
       <button type="button" class="btn btn-primary m-1" (click)="openImageInApp()"><i class="fa fa-open"></i> Open Image</button>
+      <!-- <button type="button" class="btn btn-primary m-1" (click)="getImageDetails()"><i class="fa fa-address-card-o"></i> Details</button> -->
       <button [hidden]="showForm" (click)="viewForm()" type="button" class="btn btn-secondary m-1"><i class="fa fa-plus-square"></i> Show Filters</button>
       <button [hidden]="!showForm" (click)="showForm = false" type="button" class="btn btn-secondary m-1"><i class="fa fa-minus-square-o"></i> Hide Filters</button>
       <button [hidden]="filteredImageDataArray?.length === imageDataArray?.length" (click)="clearFilters()" type="button" class="btn btn-info m-1">
@@ -51,6 +52,11 @@
   <div class="row">
     <div class="col">
       (index={{(currentIndex + 1)}} of {{filteredImageDataArray.length}}) File Path: {{filteredImageDataArray[currentIndex].fullPath}}
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      Date Taken: {{currentPictureDateTaken ? currentPictureDateTaken : "N/A"}}
     </div>
   </div>
   <div class="row mb-2">

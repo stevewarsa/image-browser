@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, nativeImage, clipboard, shell } from "electron";
+import { ExifImage } from "exif"
 import * as path from "path";
 import * as url from "url";
 import * as fs from "fs";
@@ -42,6 +43,23 @@ function createWindow() {
     win = null;
   });
 }
+
+ipcMain.on("getImageDetails", (event, arg) => {
+  //var ExifImage = require('exif').ExifImage;
+  console.log('getImageDetails: file='+ arg);
+  try {
+    new ExifImage({ image : arg }, function (error, exifData) {
+      if (error) {
+        console.log('Error: '+ error.message);
+      } else {
+        console.log(exifData); // Do something with your data!
+        win.webContents.send("getImageDetailsResponse", exifData);
+      }
+    });
+  } catch (error) {
+    console.log('Error: ' + error.message);
+  }
+});
 
 ipcMain.on("openImageInApp", (event, arg) => {
   shell.openItem(arg);

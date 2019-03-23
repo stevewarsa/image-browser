@@ -90,6 +90,15 @@ export class FileService {
     });
   }
 
+  async getImageDetails(imagePath: string) {
+    return new Promise<any>((resolve, reject) => {
+      this.ipc.once("getImageDetailsResponse", (event, arg) => {
+        resolve(arg);
+      });
+      this.ipc.send("getImageDetails", imagePath);
+    });
+  }
+
   async getImageMetaData(imagePath: string) {
     return new Promise<ImageData>((resolve, reject) => {
       this.ipc.once("imageDataLookupResponse", (event, arg) => {
