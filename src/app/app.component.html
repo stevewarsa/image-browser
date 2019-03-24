@@ -64,6 +64,12 @@
     <label class="mr-2" for="newtag">New Tag:</label>
     <input #tagInput (keyup)="filterItems($event)" class="mr-2" type="text" id="newtag" name="newtag" [(ngModel)]="newTag">
     <button [disabled]="newTag === null || newTag.trim() === '' || tagNames.includes(newTag.trim().toUpperCase())" type="button" (click)="addTag()" class="btn btn-primary mr-1">Add Tag</button>
+    <button type="button" (click)="addTagsDirectly(['Cats', 'Funny Animal Pictures'])" class="btn btn-primary mr-1">Funny Cats</button>
+    <button type="button" (click)="addTagsDirectly(['Dogs', 'Funny Animal Pictures'])" class="btn btn-primary mr-1">Funny Dogs</button>
+    <button type="button" (click)="addTagsDirectly(['Zoo'])" class="btn btn-primary mr-1">Zoo</button>
+    <button type="button" (click)="addTagsDirectly(['Cardinals Football'])" class="btn btn-primary mr-1">Cardinals Football</button>
+    <button type="button" (click)="showTagsPopup(['Mountains', 'Autumn Colors', 'Waterfalls', 'Wild Flowers', 'Snow Scenes', 'Green Scenes', 'Lakes', 'River', 'Sunsets and Sunrises'], ['Mountains'])" class="btn btn-primary mr-1">Mountains</button>
+    <button type="button" (click)="showTagsPopup(['Brian', 'Brian And Friends', 'Brian and Dad', 'Brian Young', 'Brian and Allyson', 'Tina and Brian', 'Family', 'Grandma and Brian', 'Grandpa and Brian', 'Mom and Dad', 'Mom', 'Dad', 'Tina', 'Steve', 'Steve and Tina', 'Steve and Dad', 'Steve and Mom'], ['Brian'])" class="btn btn-primary mr-1">Brian</button>
   </div>
   <div class="row mb-2">
     <label [hidden]="!shownTags[tag.tagName]" *ngFor="let tag of tags" class="checkbox-inline">

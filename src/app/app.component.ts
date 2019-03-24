@@ -2,6 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { FileService } from './file.service';
 import { ImageData } from './image-data';
 import { Tag } from './tag';
+import { ModalHelperService } from './modal-helper.service';
 
 @Component({
   selector: 'img-root',
@@ -31,7 +32,7 @@ export class AppComponent implements OnInit {
   @ViewChild('tagInput') tagInput: ElementRef;
   @ViewChild('filterTagInputInForm') filterTagInputInForm: ElementRef;
 
-  constructor(private fileService: FileService) { }
+  constructor(private fileService: FileService, private modalHelperService: ModalHelperService) { }
 
   ngOnInit() {
     this.busy = true;
@@ -143,6 +144,22 @@ export class AppComponent implements OnInit {
     this.showForm = false;
     this.currentIndex = -1;
     this.next();
+  }
+
+  addTagsDirectly(tags: string[]) {
+    let tagsToSend: Tag[] = this.tags.filter((tag: Tag) => tags.includes(tag.tagName));
+    tagsToSend.forEach((tag: Tag) => this.tagFlags[tag.tagName] = true);
+    this.applyTags();
+  }
+
+  showTagsPopup(tags: string[], defaultSelected: string[]) {
+    let tagsToSend: Tag[] = this.tags.filter((tag: Tag) => tags.includes(tag.tagName));
+    this.modalHelperService.openTagSelection(tagsToSend, defaultSelected).result.then((selectedTags: Tag[]) => {
+      if (selectedTags && selectedTags.length > 0) {
+        selectedTags.forEach((tag: Tag) => this.tagFlags[tag.tagName] = true);
+        this.applyTags();
+      }
+    })
   }
 
   clearFilters() {

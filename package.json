@@ -12,7 +12,7 @@
     "e2e": "ng e2e",
     "electron": "ng build && tsc --p electron && electron .",
     "electron-aot": "ng build --prod && electron .",
-    "package-win": "electron-packager . image-browser --overwrite --asar=true --platform=win32 --arch=ia32 --prune=true --out=release-builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"Image Browser\""
+    "package-win": "electron-packager . image-browser --overwrite --asar=true --platform=win32 --arch=ia32 --prune=true --out=c:/release-builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"Image Browser\""
   },
   "private": true,
   "dependencies": {

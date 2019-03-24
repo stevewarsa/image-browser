@@ -1,3 +1,5 @@
+import { ConfirmComponent } from './confirm/confirm.component';
+import { AlertComponent } from './alert/alert.component';
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -6,10 +8,14 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { OpenTagsComponent } from './open-tags/open-tags.component';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    AlertComponent,
+    ConfirmComponent,
+    OpenTagsComponent
   ],
   imports: [
     BrowserModule,
@@ -18,6 +24,9 @@ import { AppComponent } from './app.component';
     NgbModule
   ],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
+  entryComponents: [
+    OpenTagsComponent
+  ]
 })
 export class AppModule { }
