@@ -138,6 +138,13 @@ export class AppComponent implements OnInit {
     this.next();
   }
 
+  filterToImagesWithoutTags() {
+    this.filteredImageDataArray = this.imageDataArray.filter((img: ImageData) => img.id === -1 && (img.tags === null || img.tags.length === 0));
+    this.showForm = false;
+    this.currentIndex = -1;
+    this.next();
+  }
+
   clearFilters() {
     this.tags.forEach(tag => { 
       if (this.filterImageFlags[tag.tagName]) {
