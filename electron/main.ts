@@ -45,10 +45,9 @@ function createWindow() {
 }
 
 ipcMain.on("getImageDetails", (event, arg) => {
-  //var ExifImage = require('exif').ExifImage;
   console.log('getImageDetails: file='+ arg);
   try {
-    new ExifImage({ image : arg }, function (error, exifData) {
+    new ExifImage({ image : arg }, (error, exifData) => {
       if (error) {
         console.log('Error: '+ error.message);
       } else {
@@ -56,8 +55,8 @@ ipcMain.on("getImageDetails", (event, arg) => {
         win.webContents.send("getImageDetailsResponse", exifData);
       }
     });
-  } catch (error) {
-    console.log('Error: ' + error.message);
+  } catch (e) {
+    console.log('Error: ' + e.message);
   }
 });
 

@@ -5,6 +5,7 @@ export class ImageData {
     fullPath: string = null;
     fileName: string = null;
     filePath: string = null;
+    exifData: any = null;
     tags: Tag[] = [];
 
     addTag(tag: Tag) {

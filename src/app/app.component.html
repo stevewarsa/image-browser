@@ -47,17 +47,27 @@
   </form>
   <div class="row">
     <div class="col">
-      <img style="max-width: 100%; min-height: 600px; max-height: 600px;" src="file:///{{filteredImageDataArray[currentIndex].fullPath}}">
+      <img style="max-width: 100%; min-height: 600px; max-height: 600px;" src="file:///{{currentMetaData.fullPath}}">
     </div>
   </div>
   <div class="row">
     <div class="col">
-      (index={{(currentIndex + 1)}} of {{filteredImageDataArray.length}}) File Path: {{filteredImageDataArray[currentIndex].fullPath}}
+      (index={{(currentIndex + 1)}} of {{filteredImageDataArray.length}}) File Path: {{currentMetaData.fullPath}}
+    </div>
+  </div>
+  <div class="row" [hidden]="!currentMetaData.exifData || !currentMetaData.exifData?.exif || !currentMetaData.exifData?.exif?.DateTimeOriginal || currentMetaData.exifData?.exif?.DateTimeOriginal.trim() === ''">
+    <div class="col">
+      <strong>Date Taken:</strong> {{currentMetaData.exifData?.exif?.DateTimeOriginal}}
+    </div>
+  </div>
+  <div class="row" [hidden]="!currentMetaData.exifData || !currentMetaData.exifData?.image || !currentMetaData.exifData?.image?.Make || !currentMetaData.exifData?.image?.Model">
+    <div class="col">
+      <strong>Camera:</strong> {{currentMetaData.exifData?.image?.Make}} / {{currentMetaData.exifData?.image?.Model}}
     </div>
   </div>
   <div class="row">
     <div class="col">
-      Date Taken: {{currentPictureDateTaken ? currentPictureDateTaken : "N/A"}}
+      <strong>Taken By Steve or Tina?</strong> {{ourCamera}}
     </div>
   </div>
   <div class="row mb-2">

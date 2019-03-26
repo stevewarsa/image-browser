@@ -16,7 +16,6 @@ export class AppComponent implements OnInit {
   lastIndexes: number[] = [0];
   currentLastViewedIndexInLastIndexes: number = 0;
   currentMetaData: ImageData = null;
-  currentPictureDateTaken: string = null;
   newTag: string = null;
   tags: Tag[] = [];
   tagNames: string[] = [];
@@ -26,6 +25,7 @@ export class AppComponent implements OnInit {
   filterTags: {[tagName:string]: boolean} = {};
   filterMode: string = "all"; 
   showForm: boolean = false;
+  ourCamera: boolean = false;
   shownTags: {[tagName:string]: boolean} = {};
   shownTagsForFilterTags: {[tagName:string]: boolean} = {};
   filterImageFlags: {[tagName:string]: boolean} = {};
@@ -54,6 +54,7 @@ export class AppComponent implements OnInit {
               && !file.toLowerCase().endsWith(".3gp") 
               && !file.toLowerCase().endsWith(".docx")
               && !file.toLowerCase().endsWith(".ico")
+              && !file.toLowerCase().endsWith(".wlmp") 
               && !file.toLowerCase().endsWith(".mov"));
       filesFound.forEach(fullFilePath => {
         let img: ImageData = allImageData[fullFilePath];
@@ -222,24 +223,30 @@ export class AppComponent implements OnInit {
     this.tags.forEach(tag => { 
       this.tagFlags[tag.tagName] = false;
     });
-    if (this.currentMetaData && this.currentMetaData.tags && this.currentMetaData.tags.length > 0) {
+    if (this.currentMetaData.tags && this.currentMetaData.tags.length > 0) {
       for (let tag of this.currentMetaData.tags) {
         console.log("updateFlags - processing tag '" + tag.tagName + "'");
         this.tagFlags[tag.tagName] = true;
       }
     }
-    this.currentPictureDateTaken = "N/A";
-    this.fileService.getImageDetails(this.filteredImageDataArray[this.currentIndex].fullPath).then(response => {
+    this.ourCamera = false;
+    this.fileService.getImageDetails(this.currentMetaData.fullPath).then(response => {
       if (response && response.exif) {
-        this.currentPictureDateTaken = response.exif.DateTimeOriginal;
-      } else {
-        this.currentPictureDateTaken = "N/A";
+        this.currentMetaData.exifData = response;
+        if (this.currentMetaData.exifData.image && this.currentMetaData.exifData.image.Make && this.currentMetaData.exifData.image.Model) {
+          let ourMakes = ['EASTMAN KODAK COMPANY', 'Research In Motion', 'HTC', 'Motorola', 'motorola', 'Motorola\u0000', 'HP'];
+          let ourModels = ['KODAK DX6340 ZOOM DIGITAL CAMERA', 'BlackBerry 8330', 'PC36100', 'DROID RAZR HD', 'HTC6525LVW', 'XT1635-01', 'HP psc1600', 'BlackBerry 9310'];
+          this.ourCamera = ourMakes.includes(this.currentMetaData.exifData.image.Make) && ourModels.includes(this.currentMetaData.exifData.image.Model);
+        }
       }
     });
     this.focusTagInput();
   }
 
   private focusTagInput() {
+    if (!this.tagInput || this.tagInput.nativeElement) {
+      return;
+    }
     setTimeout(() => {
       this.tagInput.nativeElement.focus();
     }, 100);

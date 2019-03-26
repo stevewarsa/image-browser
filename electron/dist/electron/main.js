@@ -33,7 +33,6 @@ function createWindow() {
     });
 }
 electron_1.ipcMain.on("getImageDetails", function (event, arg) {
-    //var ExifImage = require('exif').ExifImage;
     console.log('getImageDetails: file=' + arg);
     try {
         new exif_1.ExifImage({ image: arg }, function (error, exifData) {
@@ -46,8 +45,8 @@ electron_1.ipcMain.on("getImageDetails", function (event, arg) {
             }
         });
     }
-    catch (error) {
-        console.log('Error: ' + error.message);
+    catch (e) {
+        console.log('Error: ' + e.message);
     }
 });
 electron_1.ipcMain.on("openImageInApp", function (event, arg) {

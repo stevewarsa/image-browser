@@ -6,6 +6,7 @@ var ImageData = /** @class */ (function () {
         this.fullPath = null;
         this.fileName = null;
         this.filePath = null;
+        this.exifData = null;
         this.tags = [];
     }
     ImageData.prototype.addTag = function (tag) {
