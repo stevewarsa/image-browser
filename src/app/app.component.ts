@@ -256,6 +256,7 @@ export class AppComponent implements OnInit {
   }
 
   doRandom() {
+    console.log("Entering doRandom()...");
     let randNum: number = Math.floor(Math.random() * (this.filteredImageDataArray.length - 1));
     this.lastIndexes.push(this.currentIndex);
     this.currentLastViewedIndexInLastIndexes = this.lastIndexes.length - 1;
@@ -265,6 +266,7 @@ export class AppComponent implements OnInit {
   }
 
   next() {
+    console.log("Entering next()...");
     this.lastIndexes.push(this.currentIndex);
     this.currentLastViewedIndexInLastIndexes = this.lastIndexes.length - 1;
     this.currentIndex === (this.filteredImageDataArray.length - 1) ? this.currentIndex = 0 : this.currentIndex = this.currentIndex + 1;
@@ -273,6 +275,7 @@ export class AppComponent implements OnInit {
   }
 
   private updateUiAfterNavigate() {
+    console.log("Entering updateUiAfterNavigate...");
     this.tags.forEach(tag => { 
       this.tagFlags[tag.tagName] = false;
     });
@@ -283,13 +286,24 @@ export class AppComponent implements OnInit {
       }
     }
     this.ourCamera = false;
-    this.fileService.getImageDetails(this.currentMetaData.fullPath).then(response => {
+    this.fileService.getImageDetailsSync(this.currentMetaData.fullPath).then(response => {
       if (response && response.exif) {
+        console.log("app.component-Received EXIF response...");
         this.currentMetaData.exifData = response;
         if (this.currentMetaData.exifData.image && this.currentMetaData.exifData.image.Make && this.currentMetaData.exifData.image.Model) {
           let ourMakes = ['EASTMAN KODAK COMPANY', 'Research In Motion', 'HTC', 'Motorola', 'motorola', 'Motorola\u0000', 'HP'];
           let ourModels = ['KODAK DX6340 ZOOM DIGITAL CAMERA', 'BlackBerry 8330', 'PC36100', 'DROID RAZR HD', 'HTC6525LVW', 'XT1635-01', 'HP psc1600', 'BlackBerry 9310'];
           this.ourCamera = ourMakes.includes(this.currentMetaData.exifData.image.Make) && ourModels.includes(this.currentMetaData.exifData.image.Model);
+          // check to see if our camera took the picture and there is no tag 'Pictures Taken By Steve or Tina' present
+          if (this.ourCamera && this.currentMetaData.tags.filter((tag: Tag) => tag.id === 26).length < 1) {
+            let question: string = "This appears to be our picture, but doesn't have the tag 'Pictures Taken By Steve or Tina'.  Would you like to add it?";
+            this.modalHelperService.confirm({message: question, header: "Add Tag?", labels: ["Add Our Pictures Tag", "Do Not Add"]}).result.then(value => {
+              console.log("User wants to add tag 'Pictures Taken By Steve or Tina'");
+              this.addOurPictureTag();
+            }, () => {
+              console.log("User does NOT want to add tag 'Pictures Taken By Steve or Tina'");
+            });
+          }
         }
       }
     });
@@ -366,6 +380,12 @@ export class AppComponent implements OnInit {
       });
     }
     this.focusTagInput();
+  }
+
+  private addOurPictureTag() {
+    let ourPictureTagName: string = this.tags.filter((tag: Tag) => tag.id === 26)[0].tagName;
+    this.tagFlags[ourPictureTagName] = true;
+    this.applyTags();
   }
 
   updateTagFromUI(checked, tagName: string) {

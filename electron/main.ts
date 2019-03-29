@@ -36,7 +36,7 @@ function createWindow() {
 
   win.setMenu(null);
 
-  //win.webContents.openDevTools();
+  win.webContents.openDevTools();
   win.maximize();
 
   win.on("closed", () => {
@@ -45,18 +45,38 @@ function createWindow() {
 }
 
 ipcMain.on("getImageDetails", (event, arg) => {
-  console.log('getImageDetails: file='+ arg);
+  //console.log('getImageDetails: file='+ arg);
   try {
     new ExifImage({ image : arg }, (error, exifData) => {
       if (error) {
-        console.log('Error: '+ error.message);
+        //console.log('Error: '+ error.message);
       } else {
-        console.log(exifData); // Do something with your data!
+        //console.log(exifData); // Do something with your data!
+        console.log("getImageDetails - sending exif data for image " + arg);
         win.webContents.send("getImageDetailsResponse", exifData);
       }
     });
   } catch (e) {
-    console.log('Error: ' + e.message);
+    //console.log('Error: ' + e.message);
+  }
+});
+
+ipcMain.on("getImageDetailsSync", (event, arg) => {
+  //console.log('getImageDetails: file='+ arg);
+  try {
+    new ExifImage({ image : arg }, (error, exifData) => {
+      if (error) {
+        //console.log('Error: '+ error.message);
+        event.returnValue = null;
+      } else {
+        //console.log(exifData); // Do something with your data!
+        console.log("getImageDetails - sending exif data for image " + arg);
+        //win.webContents.send("getImageDetailsSyncResponse", exifData);
+        event.returnValue = exifData;
+      }
+    });
+  } catch (e) {
+    //console.log('Error: ' + e.message);
   }
 });
 
@@ -95,11 +115,11 @@ ipcMain.on("copyImageToClipboard", (event, imagePath) => {
 });
 
 ipcMain.on("imageDataLookup", (event, imagePath) => {
-  console.log("Received 'imageDataLookup' message in main.ts with arg: " + imagePath + "...");
+  //console.log("Received 'imageDataLookup' message in main.ts with arg: " + imagePath + "...");
   let query = "select id, file_name, file_path from image_data where full_path = ?";
   runSqlStatement(query, [imagePath], (results, err) => {
-    console.log("imageDataLookup-Run SQL Statement Callback with results: ");
-    console.log(results);
+    //console.log("imageDataLookup-Run SQL Statement Callback with results: ");
+    //console.log(results);
     if (results) {
       let imageData: ImageData = null;
       for (let row of results) {
@@ -118,10 +138,10 @@ ipcMain.on("imageDataLookup", (event, imagePath) => {
 });
 
 ipcMain.on("getTagId", (event, tagName) => {
-  console.log("Received 'getTagId' message in main.ts with arg: " + tagName + "...");
+  //console.log("Received 'getTagId' message in main.ts with arg: " + tagName + "...");
   runSqlStatement("select id from tag where tag_nm = ?", [tagName], (results, err) => {
-    console.log("getTagId-Run SQL Statement Callback with results: ");
-    console.log(results);
+    //console.log("getTagId-Run SQL Statement Callback with results: ");
+    //console.log(results);
     if (results) {
       let tagId = null;
       for (let row of results) {
@@ -136,11 +156,11 @@ ipcMain.on("getTagId", (event, tagName) => {
 });
 
 ipcMain.on("getImageId", (event, fullImagePath) => {
-  console.log("Received 'getImageId' message in main.ts with arg: " + fullImagePath + "...");
+  //console.log("Received 'getImageId' message in main.ts with arg: " + fullImagePath + "...");
   let query = "select id from image_data where full_path = ?";
   runSqlStatement(query, [fullImagePath], (results, err) => {
-    console.log("getImageId-Run SQL Statement Callback with results: ");
-    console.log(results);
+    //console.log("getImageId-Run SQL Statement Callback with results: ");
+    //console.log(results);
     if (results) {
       let imageId = null;
       for (let row of results) {
@@ -155,12 +175,12 @@ ipcMain.on("getImageId", (event, fullImagePath) => {
 });
 
 ipcMain.on("saveImage", (event, imageMetaData) => {
-  console.log("Received 'saveImage' message in main.ts with arg: ");
-  console.log(imageMetaData);
+  //console.log("Received 'saveImage' message in main.ts with arg: ");
+  //console.log(imageMetaData);
   let query = "insert into image_data (full_path, file_name, file_path) values(?, ?, ?)";
   runSqlStatement(query, [imageMetaData.fullPath, imageMetaData.fileName, imageMetaData.filePath], (results, err) => {
-    console.log("saveImage-Run SQL Statement Callback with results: ");
-    console.log(results);
+    //console.log("saveImage-Run SQL Statement Callback with results: ");
+    //console.log(results);
     if (results) {
       win.webContents.send("saveImageResponse", results.insertId);
     } else {
@@ -170,11 +190,11 @@ ipcMain.on("saveImage", (event, imageMetaData) => {
 });
 
 ipcMain.on("saveTag", (event, tagName) => {
-  console.log("Received 'saveTag' message in main.ts with arg: " + tagName);
+  //console.log("Received 'saveTag' message in main.ts with arg: " + tagName);
   let query = "insert into tag(tag_nm) values (?)";
   runSqlStatement(query, [tagName], (results, err) => {
-    console.log("saveTag-Run SQL Statement Callback with results: ");
-    console.log(results);
+    //console.log("saveTag-Run SQL Statement Callback with results: ");
+    //console.log(results);
     if (results) {
       win.webContents.send("saveTagResponse", results.insertId);
     } else {
@@ -184,12 +204,12 @@ ipcMain.on("saveTag", (event, tagName) => {
 });
 
 ipcMain.on("saveImageTag", (event, imageTagParam) => {
-  console.log("Received 'saveImageTag' message in main.ts with arg: ");
-  console.log(imageTagParam);
+  //console.log("Received 'saveImageTag' message in main.ts with arg: ");
+  //console.log(imageTagParam);
   let query = "insert into image_tag(image_id, tag_id) values (?, ?)";
   runSqlStatement(query, [imageTagParam.imageId, imageTagParam.tagId], (results, err) => {
-    console.log("saveImageTag-Run SQL Statement Callback with results: ");
-    console.log(results);
+    //console.log("saveImageTag-Run SQL Statement Callback with results: ");
+    //console.log(results);
     if (results) {
       win.webContents.send("saveImageTagResponse", "Image -> Tag Association saved for imageId=" + imageTagParam.imageId + ", tagId=" + imageTagParam.tagId);
     } else {
@@ -199,8 +219,8 @@ ipcMain.on("saveImageTag", (event, imageTagParam) => {
 });
 
 ipcMain.on("runSqlStatement", (event, arg) => {
-  console.log("Received 'runSqlStatement' message in main.ts with args: ");
-  console.log(arg);
+  //console.log("Received 'runSqlStatement' message in main.ts with args: ");
+  //console.log(arg);
   let respondWith: string = arg.respondWith;
   runSqlStatement(arg.sql, arg.args, (results, err) => {
     // console.log("runSqlStatement-Run SQL Statement Callback with results: ");
@@ -214,9 +234,9 @@ ipcMain.on("runSqlStatement", (event, arg) => {
 });
 
 function runSqlStatement(sql: string, args:string[], callback) {
-  console.log("function runSqlStatement in main.ts with sql: " + sql);
-  console.log("and arguments: ");
-  console.log(args);
+  //console.log("function runSqlStatement in main.ts with sql: " + sql);
+  //console.log("and arguments: ");
+  //console.log(args);
   let results = null;
   executeDb(database => database.query(sql, args).then(rows => { 
       results = rows;

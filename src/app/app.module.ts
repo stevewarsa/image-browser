@@ -26,7 +26,9 @@ import { OpenTagsComponent } from './open-tags/open-tags.component';
   providers: [],
   bootstrap: [AppComponent],
   entryComponents: [
-    OpenTagsComponent
+    OpenTagsComponent,
+    ConfirmComponent, 
+    AlertComponent
   ]
 })
 export class AppModule { }

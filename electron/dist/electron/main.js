@@ -26,27 +26,48 @@ function createWindow() {
         slashes: true
     }));
     win.setMenu(null);
-    //win.webContents.openDevTools();
+    win.webContents.openDevTools();
     win.maximize();
     win.on("closed", function () {
         win = null;
     });
 }
 electron_1.ipcMain.on("getImageDetails", function (event, arg) {
-    console.log('getImageDetails: file=' + arg);
+    //console.log('getImageDetails: file='+ arg);
     try {
         new exif_1.ExifImage({ image: arg }, function (error, exifData) {
             if (error) {
-                console.log('Error: ' + error.message);
+                //console.log('Error: '+ error.message);
             }
             else {
-                console.log(exifData); // Do something with your data!
+                //console.log(exifData); // Do something with your data!
+                console.log("getImageDetails - sending exif data for image " + arg);
                 win.webContents.send("getImageDetailsResponse", exifData);
             }
         });
     }
     catch (e) {
-        console.log('Error: ' + e.message);
+        //console.log('Error: ' + e.message);
+    }
+});
+electron_1.ipcMain.on("getImageDetailsSync", function (event, arg) {
+    //console.log('getImageDetails: file='+ arg);
+    try {
+        new exif_1.ExifImage({ image: arg }, function (error, exifData) {
+            if (error) {
+                //console.log('Error: '+ error.message);
+                event.returnValue = null;
+            }
+            else {
+                //console.log(exifData); // Do something with your data!
+                console.log("getImageDetails - sending exif data for image " + arg);
+                //win.webContents.send("getImageDetailsSyncResponse", exifData);
+                event.returnValue = exifData;
+            }
+        });
+    }
+    catch (e) {
+        //console.log('Error: ' + e.message);
     }
 });
 electron_1.ipcMain.on("openImageInApp", function (event, arg) {
@@ -81,11 +102,11 @@ electron_1.ipcMain.on("copyImageToClipboard", function (event, imagePath) {
     win.webContents.send("copyImageToClipboardResponse", "Image successfully copied!");
 });
 electron_1.ipcMain.on("imageDataLookup", function (event, imagePath) {
-    console.log("Received 'imageDataLookup' message in main.ts with arg: " + imagePath + "...");
+    //console.log("Received 'imageDataLookup' message in main.ts with arg: " + imagePath + "...");
     var query = "select id, file_name, file_path from image_data where full_path = ?";
     runSqlStatement(query, [imagePath], function (results, err) {
-        console.log("imageDataLookup-Run SQL Statement Callback with results: ");
-        console.log(results);
+        //console.log("imageDataLookup-Run SQL Statement Callback with results: ");
+        //console.log(results);
         if (results) {
             var imageData = null;
             for (var _i = 0, results_1 = results; _i < results_1.length; _i++) {
@@ -105,10 +126,10 @@ electron_1.ipcMain.on("imageDataLookup", function (event, imagePath) {
     });
 });
 electron_1.ipcMain.on("getTagId", function (event, tagName) {
-    console.log("Received 'getTagId' message in main.ts with arg: " + tagName + "...");
+    //console.log("Received 'getTagId' message in main.ts with arg: " + tagName + "...");
     runSqlStatement("select id from tag where tag_nm = ?", [tagName], function (results, err) {
-        console.log("getTagId-Run SQL Statement Callback with results: ");
-        console.log(results);
+        //console.log("getTagId-Run SQL Statement Callback with results: ");
+        //console.log(results);
         if (results) {
             var tagId = null;
             for (var _i = 0, results_2 = results; _i < results_2.length; _i++) {
@@ -124,11 +145,11 @@ electron_1.ipcMain.on("getTagId", function (event, tagName) {
     });
 });
 electron_1.ipcMain.on("getImageId", function (event, fullImagePath) {
-    console.log("Received 'getImageId' message in main.ts with arg: " + fullImagePath + "...");
+    //console.log("Received 'getImageId' message in main.ts with arg: " + fullImagePath + "...");
     var query = "select id from image_data where full_path = ?";
     runSqlStatement(query, [fullImagePath], function (results, err) {
-        console.log("getImageId-Run SQL Statement Callback with results: ");
-        console.log(results);
+        //console.log("getImageId-Run SQL Statement Callback with results: ");
+        //console.log(results);
         if (results) {
             var imageId = null;
             for (var _i = 0, results_3 = results; _i < results_3.length; _i++) {
@@ -144,12 +165,12 @@ electron_1.ipcMain.on("getImageId", function (event, fullImagePath) {
     });
 });
 electron_1.ipcMain.on("saveImage", function (event, imageMetaData) {
-    console.log("Received 'saveImage' message in main.ts with arg: ");
-    console.log(imageMetaData);
+    //console.log("Received 'saveImage' message in main.ts with arg: ");
+    //console.log(imageMetaData);
     var query = "insert into image_data (full_path, file_name, file_path) values(?, ?, ?)";
     runSqlStatement(query, [imageMetaData.fullPath, imageMetaData.fileName, imageMetaData.filePath], function (results, err) {
-        console.log("saveImage-Run SQL Statement Callback with results: ");
-        console.log(results);
+        //console.log("saveImage-Run SQL Statement Callback with results: ");
+        //console.log(results);
         if (results) {
             win.webContents.send("saveImageResponse", results.insertId);
         }
@@ -159,11 +180,11 @@ electron_1.ipcMain.on("saveImage", function (event, imageMetaData) {
     });
 });
 electron_1.ipcMain.on("saveTag", function (event, tagName) {
-    console.log("Received 'saveTag' message in main.ts with arg: " + tagName);
+    //console.log("Received 'saveTag' message in main.ts with arg: " + tagName);
     var query = "insert into tag(tag_nm) values (?)";
     runSqlStatement(query, [tagName], function (results, err) {
-        console.log("saveTag-Run SQL Statement Callback with results: ");
-        console.log(results);
+        //console.log("saveTag-Run SQL Statement Callback with results: ");
+        //console.log(results);
         if (results) {
             win.webContents.send("saveTagResponse", results.insertId);
         }
@@ -173,12 +194,12 @@ electron_1.ipcMain.on("saveTag", function (event, tagName) {
     });
 });
 electron_1.ipcMain.on("saveImageTag", function (event, imageTagParam) {
-    console.log("Received 'saveImageTag' message in main.ts with arg: ");
-    console.log(imageTagParam);
+    //console.log("Received 'saveImageTag' message in main.ts with arg: ");
+    //console.log(imageTagParam);
     var query = "insert into image_tag(image_id, tag_id) values (?, ?)";
     runSqlStatement(query, [imageTagParam.imageId, imageTagParam.tagId], function (results, err) {
-        console.log("saveImageTag-Run SQL Statement Callback with results: ");
-        console.log(results);
+        //console.log("saveImageTag-Run SQL Statement Callback with results: ");
+        //console.log(results);
         if (results) {
             win.webContents.send("saveImageTagResponse", "Image -> Tag Association saved for imageId=" + imageTagParam.imageId + ", tagId=" + imageTagParam.tagId);
         }
@@ -188,8 +209,8 @@ electron_1.ipcMain.on("saveImageTag", function (event, imageTagParam) {
     });
 });
 electron_1.ipcMain.on("runSqlStatement", function (event, arg) {
-    console.log("Received 'runSqlStatement' message in main.ts with args: ");
-    console.log(arg);
+    //console.log("Received 'runSqlStatement' message in main.ts with args: ");
+    //console.log(arg);
     var respondWith = arg.respondWith;
     runSqlStatement(arg.sql, arg.args, function (results, err) {
         // console.log("runSqlStatement-Run SQL Statement Callback with results: ");
@@ -203,9 +224,9 @@ electron_1.ipcMain.on("runSqlStatement", function (event, arg) {
     });
 });
 function runSqlStatement(sql, args, callback) {
-    console.log("function runSqlStatement in main.ts with sql: " + sql);
-    console.log("and arguments: ");
-    console.log(args);
+    //console.log("function runSqlStatement in main.ts with sql: " + sql);
+    //console.log("and arguments: ");
+    //console.log(args);
     var results = null;
     executeDb(function (database) { return database.query(sql, args).then(function (rows) {
         results = rows;

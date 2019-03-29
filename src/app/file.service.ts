@@ -93,9 +93,24 @@ export class FileService {
   async getImageDetails(imagePath: string) {
     return new Promise<any>((resolve, reject) => {
       this.ipc.once("getImageDetailsResponse", (event, arg) => {
+        console.log("file.service-Received EXIF response. Here is the event received:");
+        console.log(event);
         resolve(arg);
       });
+      console.log("file.service-Sending EXIF request...");
       this.ipc.send("getImageDetails", imagePath);
+    });
+  }
+
+  getImageDetailsSync(imagePath: string) {
+    return new Promise<any>((resolve, reject) => {
+      let retValue = this.ipc.sendSync("getImageDetailsSync", imagePath);
+      resolve(retValue);
+      // this.ipc.once("getImageDetailsSyncResponse", (event, arg) => {
+      //   console.log("file.service-Received EXIF response. Here is the event received:");
+      //   console.log(event);
+      //   resolve(arg);
+      // });
     });
   }
 
