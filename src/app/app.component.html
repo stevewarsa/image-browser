@@ -16,8 +16,10 @@
       <button type="button" class="btn btn-primary m-1" (click)="copyImageToClipboard()"><i class="fa fa-clipboard"></i> Copy Image</button>
       <button type="button" class="btn btn-primary m-1" (click)="openImageInApp()"><i class="fa fa-open"></i> Open Image</button>
       <!-- <button type="button" class="btn btn-primary m-1" (click)="getImageDetails()"><i class="fa fa-address-card-o"></i> Details</button> -->
-      <button [hidden]="showForm" (click)="viewForm()" type="button" class="btn btn-secondary m-1"><i class="fa fa-plus-square"></i> Show Filters</button>
-      <button [hidden]="!showForm" (click)="showForm = false" type="button" class="btn btn-secondary m-1"><i class="fa fa-minus-square-o"></i> Hide Filters</button>
+      <button [hidden]="showForm" (click)="viewForm()" type="button" class="btn btn-secondary m-1"><i class="fa fa-plus-square"></i> Show Included Tags</button>
+      <button [hidden]="!showForm" (click)="showForm = false" type="button" class="btn btn-secondary m-1"><i class="fa fa-minus-square-o"></i> Hide Included Tags</button>
+      <button [hidden]="showExcludeForm" (click)="viewExcludeForm()" type="button" class="btn btn-secondary m-1"><i class="fa fa-plus-square"></i> Show Excluded Tags</button>
+      <button [hidden]="!showExcludeForm" (click)="showExcludeForm = false" type="button" class="btn btn-secondary m-1"><i class="fa fa-minus-square-o"></i> Hide Excluded Tags</button>
       <button [hidden]="filteredImageDataArray?.length === imageDataArray?.length" (click)="clearFilters()" type="button" class="btn btn-info m-1">
         <span class="fa-stack fa-2x">
           <i class="fa fa-filter fa-stack-1x"></i>
@@ -28,6 +30,10 @@
     </div>
   </div>
   <form [hidden]="!showForm" class="mr-3 mb-2">
+    <h2>Check the tags you want to see</h2>
+    <h4><em><u>ANY</u></em> means as long as the image has any of the checked tags, it will be shown.  <em><u>ALL</u></em> means the image must have ALL of the tags checked for it to be shown. 
+      Note that if none of the tags are checked then all images will be shown, except those that are excluded.
+    </h4>
     <div class="form-group">
       <label class="radio-inline"> 
         <input type="radio" name="filter_mode" value="any" [(ngModel)]="filterMode"> ANY
@@ -41,6 +47,18 @@
     <div class="form-group">
       <label [hidden]="!shownTagsForFilterTags[tag.tagName]" *ngFor="let tag of tags" class="checkbox-inline">
         <input class="ml-2" type="checkbox" name="{{tag.tagName}}" (change)="selectTagForFilter($event.target.checked, tag.tagName)" [checked]="filterImageFlags[tag.tagName]" /> {{tag.tagName}}
+      </label>
+    </div>
+    <button type="button" (click)="filterImages()" class="btn btn-primary"><i class="fa fa-filter"></i> Apply Filter</button>
+  </form>
+  <form [hidden]="!showExcludeForm" class="mr-3 mb-2">
+      <h2>Check the tags you DON'T want to see</h2>
+      <div class="form-group">
+      <input #excludeTagInputInForm (keyup)="filterTagsForExclude($event.target.value)" class="m-2" type="text" id="filtertagsforexclude" name="filtertagsforexclude">
+    </div>
+    <div class="form-group">
+      <label [hidden]="!shownTagsForExcludeTags[tag.tagName]" *ngFor="let tag of tags" class="checkbox-inline">
+        <input class="ml-2" type="checkbox" name="{{tag.tagName}}" (change)="selectTagForExclude($event.target.checked, tag.tagName)" [checked]="excludeImageFlags[tag.tagName]" /> {{tag.tagName}}
       </label>
     </div>
     <button type="button" (click)="filterImages()" class="btn btn-primary"><i class="fa fa-filter"></i> Apply Filter</button>
@@ -78,7 +96,7 @@
     <button type="button" (click)="addTagsDirectly(['Dogs', 'Funny Animal Pictures'])" class="btn btn-primary mr-1">Funny Dogs</button>
     <button type="button" (click)="addTagsDirectly(['Zoo'])" class="btn btn-primary mr-1">Zoo</button>
     <button type="button" (click)="addTagsDirectly(['Cardinals Football'])" class="btn btn-primary mr-1">Cardinals Football</button>
-    <button type="button" (click)="showTagsPopup(['Mountains', 'Autumn Colors', 'Waterfalls', 'Wild Flowers', 'Snow Scenes', 'Green Scenes', 'Lakes', 'River', 'Sunsets and Sunrises'], ['Mountains'])" class="btn btn-primary mr-1">Mountains</button>
+    <button type="button" (click)="showTagsPopup(['Mountains', 'Autumn Colors', 'Waterfalls', 'Wild Flowers', 'Snow Scenes', 'Green Scenes', 'Lakes and Ponds', 'River', 'Sunsets and Sunrises'], ['Mountains'])" class="btn btn-primary mr-1">Mountains</button>
     <button type="button" (click)="showTagsPopup(['Brian', 'Brian And Friends', 'Brian and Dad', 'Brian Young', 'Brian and Allyson', 'Tina and Brian', 'Family', 'Grandma and Brian', 'Grandpa and Brian', 'Mom and Dad', 'Mom', 'Dad', 'Tina', 'Steve', 'Steve and Tina', 'Steve and Dad', 'Steve and Mom'], ['Brian'])" class="btn btn-primary mr-1">Brian</button>
   </div>
   <div class="row mb-2">

@@ -22,15 +22,18 @@ export class AppComponent implements OnInit {
   imageDataArray: ImageData[] = [];
   filteredImageDataArray: ImageData[] = [];
   tagFlags: {[tagName:string]: boolean} = {};
-  filterTags: {[tagName:string]: boolean} = {};
   filterMode: string = "all"; 
   showForm: boolean = false;
+  showExcludeForm: boolean = false;
   ourCamera: boolean = false;
   shownTags: {[tagName:string]: boolean} = {};
   shownTagsForFilterTags: {[tagName:string]: boolean} = {};
+  shownTagsForExcludeTags: {[tagName:string]: boolean} = {};
   filterImageFlags: {[tagName:string]: boolean} = {};
+  excludeImageFlags: {[tagName:string]: boolean} = {};
   @ViewChild('tagInput') tagInput: ElementRef;
   @ViewChild('filterTagInputInForm') filterTagInputInForm: ElementRef;
+  @ViewChild('excludeTagInputInForm') excludeTagInputInForm: ElementRef;
 
   constructor(private fileService: FileService, private modalHelperService: ModalHelperService) { }
 
@@ -72,6 +75,7 @@ export class AppComponent implements OnInit {
       this.tags.forEach(tag => { 
         this.shownTags[tag.tagName] = true;
         this.shownTagsForFilterTags[tag.tagName] = true;
+        this.shownTagsForExcludeTags[tag.tagName] = true;
         this.tagNames.push(tag.tagName.toUpperCase());
       });
       
@@ -95,47 +99,78 @@ export class AppComponent implements OnInit {
     });
   }
 
+  filterTagsForExclude(value: any) {
+    let searchString = value.toUpperCase().trim();
+    Object.keys(this.shownTagsForExcludeTags).map((key, index) => {
+        this.shownTagsForExcludeTags[key] = key.toUpperCase().includes(searchString); 
+    });
+  }
+
   filterImages() {
-    let checkedTags: string[] = Object.keys(this.filterImageFlags).filter(key => this.filterImageFlags[key]);
-    let numberChecked: number = checkedTags.length;
-    let anyChecked: boolean =  numberChecked > 0;
+    let checkedIncludeTags: string[] = Object.keys(this.filterImageFlags).filter(key => this.filterImageFlags[key]);
+    let checkedExcludeTags: string[] = Object.keys(this.excludeImageFlags).filter(key => this.excludeImageFlags[key]);
+    let numberIncludedChecked: number = checkedIncludeTags.length;
+    let numberExcludedChecked: number = checkedExcludeTags.length;
+    let anyChecked: boolean =  numberIncludedChecked > 0 || numberExcludedChecked > 0;
     if (!anyChecked) {
-      console.log("Nothing checked for filter - resetting filteredImageDataArray and returning");
+      console.log("Nothing checked for include or exclude - resetting filteredImageDataArray and returning");
       this.filteredImageDataArray = this.imageDataArray.slice();
       this.showForm = false;
       this.currentIndex = -1;
       this.next();
       return;
     } else {
-      console.log("There are " + numberChecked + " tags checked for filter");
+      console.log("There are " + numberIncludedChecked + " tags checked for include");
+      console.log("There are " + numberExcludedChecked + " tags checked for exclude");
     }
-    this.filteredImageDataArray = this.imageDataArray.filter((img: ImageData) => {
-      if (this.filterMode === "all") {
-        let matchedAll: boolean = true;
-        // go through each of the tags that have been selected for 
-        // filter. If the current image doesn't include each and 
-        // every tag, it is considered "not matched".
-        for (let tag of checkedTags) {
-          if (!img.tags.map(tg => tg.tagName).includes(tag)) {
-            matchedAll = false;
-            break;
+    let imagesIncluded: ImageData[] = null;
+    if (numberIncludedChecked > 0) {
+      imagesIncluded = this.imageDataArray.filter((img: ImageData) => {
+        if (this.filterMode === "all") {
+          let matchedAll: boolean = true;
+          // go through each of the tags that have been selected for 
+          // filter. If the current image doesn't include each and 
+          // every tag, it is considered "not matched".
+          for (let tag of checkedIncludeTags) {
+            if (!img.tags.map(tg => tg.tagName).includes(tag)) {
+              matchedAll = false;
+              break;
+            }
           }
-        }
-        // only if the current image matched all tags, do we return it
-        if (matchedAll) {
-          return img;
-        }
-      } else {
-        // filter mode is assumed to be "any", so it only needs to match one 
-        // of the selected tags in order to be returned
-        for (let tag of img.tags) {
-          if (this.filterImageFlags[tag.tagName]) {
+          // only if the current image matched all tags, do we return it
+          if (matchedAll) {
             return img;
           }
+        } else {
+          // filter mode is assumed to be "any", so it only needs to match one 
+          // of the selected tags in order to be returned
+          for (let tag of img.tags) {
+            if (this.filterImageFlags[tag.tagName]) {
+              return img;
+            }
+          }
         }
+      });
+    } else {
+      // if nothing is checked for include, then include all images
+      imagesIncluded = this.imageDataArray.slice();
+    }
+
+    // now, take the imagesIncluded and filter out any images having tags on the exclude list
+    this.filteredImageDataArray = imagesIncluded.filter((img: ImageData) => {
+      let noExcludedTags: boolean = true;
+      for (let tag of img.tags) {
+        if (this.excludeImageFlags[tag.tagName]) {
+          noExcludedTags = false;
+          break;
+        }
+      }
+      if (noExcludedTags) {
+        return img;
       }
     });
     this.showForm = false;
+    this.showExcludeForm = false;
     this.currentIndex = -1;
     this.next();
   }
@@ -165,11 +200,8 @@ export class AppComponent implements OnInit {
 
   clearFilters() {
     this.tags.forEach(tag => { 
-      if (this.filterImageFlags[tag.tagName]) {
-        console.log("Clearing image filter for tag: " + tag.tagName);
-      }
       this.filterImageFlags[tag.tagName] = false;
-      this.filterTags[tag.tagName] = false;
+      this.excludeImageFlags[tag.tagName] = false;
     });
     this.filteredImageDataArray = this.imageDataArray.slice();
     this.currentIndex = -1;
@@ -184,9 +216,24 @@ export class AppComponent implements OnInit {
     this.focusFilterTagInFormInput();
   }
 
+  selectTagForExclude(checked: boolean, tagName: string) {
+    console.log("Setting exclusion tag " + tagName + " to " + (checked ? "Selected" : "Unselected") + "...");
+    this.excludeImageFlags[tagName] = checked;
+    this.excludeTagInputInForm.nativeElement.value = "";
+    this.filterTagsForExclude("");
+    this.focusExcludeTagInFormInput();
+  }
+
   viewForm() {
     this.showForm = true;
+    this.showExcludeForm = false;
     this.focusFilterTagInFormInput();
+  }
+
+  viewExcludeForm() {
+    this.showForm = false;
+    this.showExcludeForm = true;
+    this.focusExcludeTagInFormInput();
   }
 
   getImageDetails() {
@@ -199,6 +246,12 @@ export class AppComponent implements OnInit {
   focusFilterTagInFormInput() {
     setTimeout(() => {
       this.filterTagInputInForm.nativeElement.focus();
+    }, 300);
+  }
+
+  focusExcludeTagInFormInput() {
+    setTimeout(() => {
+      this.excludeTagInputInForm.nativeElement.focus();
     }, 300);
   }
 
@@ -244,9 +297,6 @@ export class AppComponent implements OnInit {
   }
 
   private focusTagInput() {
-    if (!this.tagInput || this.tagInput.nativeElement) {
-      return;
-    }
     setTimeout(() => {
       this.tagInput.nativeElement.focus();
     }, 100);
