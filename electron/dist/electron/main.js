@@ -26,48 +26,29 @@ function createWindow() {
         slashes: true
     }));
     win.setMenu(null);
-    win.webContents.openDevTools();
+    //win.webContents.openDevTools();
     win.maximize();
     win.on("closed", function () {
         win = null;
     });
 }
-electron_1.ipcMain.on("getImageDetails", function (event, arg) {
-    //console.log('getImageDetails: file='+ arg);
-    try {
-        new exif_1.ExifImage({ image: arg }, function (error, exifData) {
-            if (error) {
-                //console.log('Error: '+ error.message);
-            }
-            else {
-                //console.log(exifData); // Do something with your data!
-                console.log("getImageDetails - sending exif data for image " + arg);
-                win.webContents.send("getImageDetailsResponse", exifData);
-            }
-        });
-    }
-    catch (e) {
-        //console.log('Error: ' + e.message);
-    }
-});
 electron_1.ipcMain.on("getImageDetailsSync", function (event, arg) {
-    //console.log('getImageDetails: file='+ arg);
+    console.log('getImageDetails: file=' + arg);
     try {
         new exif_1.ExifImage({ image: arg }, function (error, exifData) {
             if (error) {
-                //console.log('Error: '+ error.message);
+                console.log('Error: ' + error.message);
                 event.returnValue = null;
             }
             else {
-                //console.log(exifData); // Do something with your data!
+                console.log(exifData); // Do something with your data!
                 console.log("getImageDetails - sending exif data for image " + arg);
-                //win.webContents.send("getImageDetailsSyncResponse", exifData);
                 event.returnValue = exifData;
             }
         });
     }
     catch (e) {
-        //console.log('Error: ' + e.message);
+        console.log('Error caught: ' + e.message);
     }
 });
 electron_1.ipcMain.on("openImageInApp", function (event, arg) {
