@@ -24,6 +24,7 @@ export class AppComponent implements OnInit {
   tagFlags: {[tagName:string]: boolean} = {};
   filterMode: string = "all"; 
   showForm: boolean = false;
+  showAddTagForm: boolean = false;
   showExcludeForm: boolean = false;
   ourCamera: boolean = false;
   shownTags: {[tagName:string]: boolean} = {};
@@ -169,10 +170,20 @@ export class AppComponent implements OnInit {
         return img;
       }
     });
-    this.showForm = false;
-    this.showExcludeForm = false;
-    this.currentIndex = -1;
-    this.next();
+    if (!this.filteredImageDataArray || this.filteredImageDataArray.length === 0) {
+      // display message and then put the image array back to all images & reset the filter flags
+      this.modalHelperService.alert({message: "There were no images found matching the selected filters.  Resetting filters.", header: "No Images Found"}).result.then(() => {
+        console.log("Message displayed...");
+      });
+      this.showForm = false;
+      this.showExcludeForm = false;
+      this.clearFilters();
+    } else {
+      this.showForm = false;
+      this.showExcludeForm = false;
+      this.currentIndex = -1;
+      this.next();
+    }
   }
 
   filterToImagesWithoutTags() {
@@ -211,16 +222,16 @@ export class AppComponent implements OnInit {
   selectTagForFilter(checked: boolean, tagName: string) {
     console.log("Setting tag " + tagName + " to " + (checked ? "Selected" : "Unselected") + "...");
     this.filterImageFlags[tagName] = checked;
-    this.filterTagInputInForm.nativeElement.value = "";
-    this.filterTagsForFilter("");
+    //this.filterTagInputInForm.nativeElement.value = "";
+    //this.filterTagsForFilter("");
     this.focusFilterTagInFormInput();
   }
 
   selectTagForExclude(checked: boolean, tagName: string) {
     console.log("Setting exclusion tag " + tagName + " to " + (checked ? "Selected" : "Unselected") + "...");
     this.excludeImageFlags[tagName] = checked;
-    this.excludeTagInputInForm.nativeElement.value = "";
-    this.filterTagsForExclude("");
+    //this.excludeTagInputInForm.nativeElement.value = "";
+    //this.filterTagsForExclude("");
     this.focusExcludeTagInFormInput();
   }
 
@@ -236,6 +247,11 @@ export class AppComponent implements OnInit {
     this.focusExcludeTagInFormInput();
   }
 
+  viewAddTagForm() {
+    this.showAddTagForm = true;
+    this.focusTagInput();
+  }
+
   getImageDetails() {
     this.fileService.getImageDetails(this.filteredImageDataArray[this.currentIndex].fullPath).then(response => {
       console.log("AppComponent.getImageDetails - response: ");
@@ -246,12 +262,14 @@ export class AppComponent implements OnInit {
   focusFilterTagInFormInput() {
     setTimeout(() => {
       this.filterTagInputInForm.nativeElement.focus();
+      this.filterTagInputInForm.nativeElement.select();
     }, 300);
   }
 
   focusExcludeTagInFormInput() {
     setTimeout(() => {
       this.excludeTagInputInForm.nativeElement.focus();
+      this.excludeTagInputInForm.nativeElement.select();
     }, 300);
   }
 
@@ -279,6 +297,9 @@ export class AppComponent implements OnInit {
     this.tags.forEach(tag => { 
       this.tagFlags[tag.tagName] = false;
     });
+    if (!this.currentMetaData) {
+      return;
+    }
     if (this.currentMetaData.tags && this.currentMetaData.tags.length > 0) {
       for (let tag of this.currentMetaData.tags) {
         console.log("updateFlags - processing tag '" + tag.tagName + "'");
@@ -297,23 +318,25 @@ export class AppComponent implements OnInit {
           // check to see if our camera took the picture and there is no tag 'Pictures Taken By Steve or Tina' present
           if (this.ourCamera && this.currentMetaData.tags.filter((tag: Tag) => tag.id === 26).length < 1) {
             this.addOurPictureTag();
-            // let question: string = "This appears to be our picture, but doesn't have the tag 'Pictures Taken By Steve or Tina'.  Would you like to add it?";
-            // this.modalHelperService.confirm({message: question, header: "Add Tag?", labels: ["Add Our Pictures Tag", "Do Not Add"]}).result.then(value => {
-            //   console.log("User wants to add tag 'Pictures Taken By Steve or Tina'");
-            //   this.addOurPictureTag();
-            // }, () => {
-            //   console.log("User does NOT want to add tag 'Pictures Taken By Steve or Tina'");
-            // });
           }
         }
       }
+    });
+    this.newTag = null;
+    this.tags.forEach(tag => { 
+      this.shownTags[tag.tagName] = true;
     });
     this.focusTagInput();
   }
 
   private focusTagInput() {
+    if (!this.showAddTagForm) {
+      // only focus this field if the add tags form is shown
+      return;
+    }
     setTimeout(() => {
       this.tagInput.nativeElement.focus();
+      this.tagInput.nativeElement.select();
     }, 100);
   }
 
@@ -434,10 +457,10 @@ export class AppComponent implements OnInit {
       // remove existing image tag records
       this.deleteImageTags();
     }
-    this.newTag = null;
-    this.tags.forEach(tag => { 
-      this.shownTags[tag.tagName] = true;
-    });
+    // this.newTag = null;
+    // this.tags.forEach(tag => { 
+    //   this.shownTags[tag.tagName] = true;
+    // });
     this.focusTagInput();
   }
 
