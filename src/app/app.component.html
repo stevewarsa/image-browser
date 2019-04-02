@@ -47,7 +47,7 @@
         <input class="ml-2" type="checkbox" name="{{tag.tagName}}" (change)="selectTagForFilter($event.target.checked, tag.tagName)" [checked]="filterImageFlags[tag.tagName]" /> {{tag.tagName}}
       </label>
     </div>
-    <button type="button" (click)="filterImages()" class="btn btn-primary"><i class="fa fa-filter"></i> Apply Filter</button>
+    <!-- <button type="button" (click)="filterImages()" class="btn btn-primary"><i class="fa fa-filter"></i> Apply Filter</button> -->
   </form>
   <form [hidden]="!showExcludeForm" class="mr-3 mb-2">
       <h2>Check the tags you DON'T want to see</h2>
@@ -59,7 +59,7 @@
         <input class="ml-2" type="checkbox" name="{{tag.tagName}}" (change)="selectTagForExclude($event.target.checked, tag.tagName)" [checked]="excludeImageFlags[tag.tagName]" /> {{tag.tagName}}
       </label>
     </div>
-    <button type="button" (click)="filterImages()" class="btn btn-primary"><i class="fa fa-filter"></i> Apply Filter</button>
+    <!-- <button type="button" (click)="filterImages()" class="btn btn-primary"><i class="fa fa-filter"></i> Apply Filter</button> -->
   </form>
   <div class="row">
     <div class="col">
@@ -76,14 +76,19 @@
       <strong>Date Taken:</strong> {{currentMetaData.exifData?.exif?.DateTimeOriginal}}
     </div>
   </div>
-  <div class="row" [hidden]="!currentMetaData.exifData || !currentMetaData.exifData?.image || !currentMetaData.exifData?.image?.Make || !currentMetaData.exifData?.image?.Model">
+  <div class="row">
     <div class="col">
-      <strong>Camera:</strong> {{currentMetaData.exifData?.image?.Make}} / {{currentMetaData.exifData?.image?.Model}}
+      <strong>Taken By Steve or Tina?</strong> {{ourCamera}}
     </div>
   </div>
   <div class="row">
     <div class="col">
-      <strong>Taken By Steve or Tina?</strong> {{ourCamera}}
+      <strong>Tags for Picture:</strong>&nbsp;&nbsp;<span *ngFor="let tag of currentMetaData.tags"><u>{{tag.tagName}}</u>&nbsp;</span>
+    </div>
+  </div>
+  <div class="row" [hidden]="!currentMetaData.exifData || !currentMetaData.exifData?.image || !currentMetaData.exifData?.image?.Make || !currentMetaData.exifData?.image?.Model">
+    <div class="col">
+      <strong>Camera:</strong> {{currentMetaData.exifData?.image?.Make}} / {{currentMetaData.exifData?.image?.Model}}
     </div>
   </div>
   <div class="row">

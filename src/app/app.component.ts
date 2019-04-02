@@ -225,6 +225,7 @@ export class AppComponent implements OnInit {
     //this.filterTagInputInForm.nativeElement.value = "";
     //this.filterTagsForFilter("");
     this.focusFilterTagInFormInput();
+    this.filterImages();
   }
 
   selectTagForExclude(checked: boolean, tagName: string) {
@@ -233,6 +234,7 @@ export class AppComponent implements OnInit {
     //this.excludeTagInputInForm.nativeElement.value = "";
     //this.filterTagsForExclude("");
     this.focusExcludeTagInFormInput();
+    this.filterImages();
   }
 
   viewForm() {
