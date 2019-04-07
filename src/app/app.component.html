@@ -97,6 +97,7 @@
       <button [hidden]="!showAddTagForm" (click)="showAddTagForm = false" type="button" class="btn btn-secondary m-1"><i class="fa fa-minus-square-o"></i> Hide Add Tags</button>
       <button type="button" class="btn btn-primary m-1" (click)="copyImageToClipboard()"><i class="fa fa-clipboard"></i> Copy Image</button>
       <button type="button" class="btn btn-primary m-1" (click)="openImageInApp()"><i class="fa fa-open"></i> Open Image</button>
+      <button type="button" class="btn btn-danger m-1" (click)="deleteImage()"><i class="fa fa-trash"></i> Delete Image</button>
     </div>
   </div>
   <div [hidden]="!showAddTagForm" class="row mb-2">

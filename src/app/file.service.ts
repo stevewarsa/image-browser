@@ -102,6 +102,13 @@ export class FileService {
     });
   }
 
+  deleteFile(fullPath: string) {
+    return new Promise<string>((resolve, reject) => {
+      let retValue = this.ipc.sendSync("deleteImage", fullPath);
+      resolve(retValue);
+    });
+  }
+
   getImageDetailsSync(imagePath: string) {
     return new Promise<any>((resolve, reject) => {
       let retValue = this.ipc.sendSync("getImageDetailsSync", imagePath);
@@ -142,6 +149,15 @@ export class FileService {
       //console.log("Sending message to main 'runSqlStatement'");
       this.ipc.send("runSqlStatement", {sql: "select id, tag_nm from tag, image_tag where id = tag_id and image_id = ?", args: [imageId], respondWith: "getTagsForImageResponse"});
     });
+  }
+
+  deleteImage(imageId: number): string[] {
+    let retValues: string[] = [];
+    let retValue = this.ipc.sendSync("runSqlStatementSync", {sql: "delete from image_data where id = ?", args: [imageId]});
+    retValues.push(retValue);
+    retValue = this.ipc.sendSync("runSqlStatementSync", {sql: "delete from image_tag where image_id = ?", args: [imageId]});
+    retValues.push(retValue);
+    return retValues;
   }
 
   async deleteImageTags(imageId: number) {

@@ -261,6 +261,33 @@ export class AppComponent implements OnInit {
     })
   }
 
+  deleteImage() {
+    this.modalHelperService.confirm({message: "Are you sure you would like to delete the current image?", header: "Delete Image?", labels:["Delete", "Keep"]}).result.then((value: any) => {
+      console.log("User chose to delete the current image: " + this.currentMetaData.fullPath);
+      this.fileService.deleteFile(this.currentMetaData.fullPath).then((response: string) => {
+        if (response.startsWith("Error")) {
+          this.modalHelperService.alert({message: response});
+        } else {
+          let messages:string[] = this.fileService.deleteImage(this.currentMetaData.id);
+          console.log("Here are the messages back from the 2 operations:");
+          console.log(messages);
+          console.log("Now removing the elements from the array...");
+          let elementPos = this.imageDataArray.map((x) => {
+            return x.id; 
+          }).indexOf(this.currentMetaData.id);
+          let currentImagePath: string = this.currentMetaData.fullPath;
+          this.imageDataArray.splice(elementPos, 1);
+          this.filteredImageDataArray.splice(this.currentIndex, 1);
+          this.next();
+          this.modalHelperService.alert({message: currentImagePath + " has been deleted!"});
+        }
+      });
+    },
+    () => {
+      console.log("User chose not to delete the current image");
+    });
+  }
+
   focusFilterTagInFormInput() {
     setTimeout(() => {
       this.filterTagInputInForm.nativeElement.focus();

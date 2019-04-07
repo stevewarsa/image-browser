@@ -55,6 +55,23 @@ electron_1.ipcMain.on("openImageInApp", function (event, arg) {
     electron_1.shell.openItem(arg);
     win.webContents.send("openImageInAppResponse", "Image successfully opened!");
 });
+electron_1.ipcMain.on("deleteImage", function (event, arg) {
+    if (fs.existsSync(arg)) {
+        fs.unlink(arg, function (err) {
+            if (err) {
+                event.returnValue = "Error - An error ocurred deleting the file " + arg + ": " + err.message;
+                console.log("Error - An error ocurred deleting the file " + arg + ": " + err.message);
+            }
+            else {
+                console.log("File succesfully deleted");
+                event.returnValue = "File " + arg + " succesfully deleted";
+            }
+        });
+    }
+    else {
+        event.returnValue = "Error - This file (" + arg + ") doesn't exist, cannot delete";
+    }
+});
 electron_1.ipcMain.on("getFiles", function (event, arg) {
     var files = [];
     getFiles(arg, files);
@@ -201,6 +218,20 @@ electron_1.ipcMain.on("runSqlStatement", function (event, arg) {
         }
         else {
             win.webContents.send(respondWith, "Error with query: " + err);
+        }
+    });
+});
+electron_1.ipcMain.on("runSqlStatementSync", function (event, arg) {
+    console.log("Received 'runSqlStatementSync' message in main.ts with args: ");
+    console.log(arg);
+    runSqlStatement(arg.sql, arg.args, function (results, err) {
+        console.log("runSqlStatementSync-Run SQL Statement Callback with results: ");
+        console.log(results);
+        if (results) {
+            event.returnValue = results;
+        }
+        else {
+            event.returnValue = "Error with query: " + err;
         }
     });
 });
