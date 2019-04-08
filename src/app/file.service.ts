@@ -8,6 +8,8 @@ import { Tag } from './tag';
 })
 export class FileService {
   private ipc: IpcRenderer;
+  private _imageDataArray: ImageData[] = [];
+  private _filteredImageDataArray: ImageData[] = [];
 
   constructor() {
     if ((<any>window).require) {
@@ -19,6 +21,22 @@ export class FileService {
     } else {
       console.warn("Could not load electron ipc");
     }
+  }
+
+  public set imageDataArray(imgs: ImageData[]) {
+    this._imageDataArray = imgs;
+  }
+
+  public get imageDataArray(): ImageData[] {
+    return this._imageDataArray;
+  }
+
+  public set filteredImageDataArray(imgs: ImageData[]) {
+    this._filteredImageDataArray = imgs;
+  }
+
+  public get filteredImageDataArray(): ImageData[] {
+    return this._filteredImageDataArray;
   }
 
   async getFiles(dirPath: string) {

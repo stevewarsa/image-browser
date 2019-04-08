@@ -1,0 +1,16 @@
+<div *ngIf="busy" class="container m-3">
+  {{busyMessage}}<br>
+  <img src="assets/ajax-loader.gif" />
+</div>
+<div *ngIf="!busy && filteredImageDataArray && filteredImageDataArray.length > 0" class="container">
+  <div class="btn-toolbar mb-3" role="toolbar" aria-label="Navigational controls">
+    <div class="btn-group mr-3" role="group" aria-label="Historical Back">
+        <button type="button" class="btn btn-secondary" (click)="back()">Back</button>
+    </div>
+  </div>
+  <div class="row" >
+    <div *ngFor="let img of filteredImageDataArray" class="col-4 card">
+      <img class="img-fluid" src="file:///{{img.fullPath}}">
+    </div>
+  </div>
+</div>

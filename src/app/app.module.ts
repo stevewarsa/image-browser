@@ -9,13 +9,19 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { OpenTagsComponent } from './open-tags/open-tags.component';
+import { LazyLoadDirective } from './lazy-load.directive';
+import { GridViewComponent } from './grid-view/grid-view.component';
+import { MainComponent } from './main/main.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     AlertComponent,
     ConfirmComponent,
-    OpenTagsComponent
+    OpenTagsComponent,
+    LazyLoadDirective,
+    GridViewComponent,
+    MainComponent
   ],
   imports: [
     BrowserModule,

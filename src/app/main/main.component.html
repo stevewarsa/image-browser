@@ -1,0 +1,121 @@
+<div *ngIf="busy" class="container m-3">
+  {{busyMessage}}<br>
+  <img src="assets/ajax-loader.gif" />
+</div>
+<div *ngIf="!busy && filteredImageDataArray && filteredImageDataArray.length > 0" class="container">
+  <div class="btn-toolbar mb-3" role="toolbar" aria-label="Navigational controls">
+    <div class="btn-group mr-3" role="group" aria-label="Historical Back">
+        <button type="button" class="btn btn-secondary" (click)="back()">Last Viewed</button>
+    </div>
+    <div class="btn-group mr-3" role="group" aria-label="Primary Navigation">
+      <button type="button" class="btn btn-danger m-1" (click)="prev()"><i class="fa fa-arrow-circle-left"></i> Prev</button>
+      <button type="button" class="btn btn-success m-1" (click)="doRandom()"><i class="fa fa-random"></i> Random</button>
+      <button type="button" class="btn btn-danger m-1" (click)="next()"><i class="fa fa-arrow-circle-right"></i> Next</button>
+      <button type="button" class="btn btn-info m-1" (click)="gridView()"><i class="fa fa-th"></i> Grid View</button>
+    </div>
+    <div class="btn-group mr-3" role="group" aria-label="Other commands">
+      <!-- <button type="button" class="btn btn-primary m-1" (click)="getImageDetails()"><i class="fa fa-address-card-o"></i> Details</button> -->
+      <button [hidden]="showForm" (click)="viewForm()" type="button" class="btn btn-secondary m-1"><i class="fa fa-plus-square"></i> Show Included Tags</button>
+      <button [hidden]="!showForm" (click)="showForm = false" type="button" class="btn btn-secondary m-1"><i class="fa fa-minus-square-o"></i> Hide Included Tags</button>
+      <button [hidden]="showExcludeForm" (click)="viewExcludeForm()" type="button" class="btn btn-secondary m-1"><i class="fa fa-plus-square"></i> Show Excluded Tags</button>
+      <button [hidden]="!showExcludeForm" (click)="showExcludeForm = false" type="button" class="btn btn-secondary m-1"><i class="fa fa-minus-square-o"></i> Hide Excluded Tags</button>
+      <button [hidden]="filteredImageDataArray?.length === imageDataArray?.length" (click)="clearFilters()" type="button" class="btn btn-info m-1">
+        <span class="fa-stack fa-2x">
+          <i class="fa fa-filter fa-stack-1x"></i>
+          <i class="fa fa-ban fa-stack-2x" style="color:Tomato"></i>
+        </span> 
+        Clear Filters
+      </button>
+    </div>
+  </div>
+  <form [hidden]="!showForm" class="mr-3 mb-2">
+    <h2>Check the tags you want to see</h2>
+    <h4><em><u>ANY</u></em> means as long as the image has any of the checked tags, it will be shown.  <em><u>ALL</u></em> means the image must have ALL of the tags checked for it to be shown. 
+      Note that if none of the tags are checked then all images will be shown, except those that are excluded.
+    </h4>
+    <div class="form-group">
+      <label class="radio-inline"> 
+        <input type="radio" name="filter_mode" value="any" [(ngModel)]="filterMode"> ANY
+      </label>
+      <label class="radio-inline"> 
+        <input class="ml-2" type="radio" name="filter_mode" value="all" [(ngModel)]="filterMode"> ALL
+      </label>
+      <input #filterTagInputInForm (keyup)="filterTagsForFilter($event.target.value)" class="m-2" type="text" id="filtertagsforfilter" name="filtertagsforfilter">
+      <button type="button" (click)="filterToImagesWithoutTags()" class="btn btn-primary"><i class="fa fa-filter"></i> Filter Images Without Tags</button>
+    </div>
+    <div class="form-group">
+      <label [hidden]="!shownTagsForFilterTags[tag.tagName]" *ngFor="let tag of tags" class="checkbox-inline">
+        <input class="ml-2" type="checkbox" name="{{tag.tagName}}" (change)="selectTagForFilter($event.target.checked, tag.tagName)" [checked]="filterImageFlags[tag.tagName]" /> {{tag.tagName}}
+      </label>
+    </div>
+    <!-- <button type="button" (click)="filterImages()" class="btn btn-primary"><i class="fa fa-filter"></i> Apply Filter</button> -->
+  </form>
+  <form [hidden]="!showExcludeForm" class="mr-3 mb-2">
+      <h2>Check the tags you DON'T want to see</h2>
+      <div class="form-group">
+      <input #excludeTagInputInForm (keyup)="filterTagsForExclude($event.target.value)" class="m-2" type="text" id="filtertagsforexclude" name="filtertagsforexclude">
+    </div>
+    <div class="form-group">
+      <label [hidden]="!shownTagsForExcludeTags[tag.tagName]" *ngFor="let tag of tags" class="checkbox-inline">
+        <input class="ml-2" type="checkbox" name="{{tag.tagName}}" (change)="selectTagForExclude($event.target.checked, tag.tagName)" [checked]="excludeImageFlags[tag.tagName]" /> {{tag.tagName}}
+      </label>
+    </div>
+    <!-- <button type="button" (click)="filterImages()" class="btn btn-primary"><i class="fa fa-filter"></i> Apply Filter</button> -->
+  </form>
+  <div class="row">
+    <div class="col">
+      <img style="max-width: 100%; min-height: 600px; max-height: 600px;" src="file:///{{currentMetaData.fullPath}}">
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      (index={{(currentIndex + 1)}} of {{filteredImageDataArray.length}}) File Path: {{currentMetaData.fullPath}}
+    </div>
+  </div>
+  <div class="row" [hidden]="!currentMetaData.exifData || !currentMetaData.exifData?.exif || !currentMetaData.exifData?.exif?.DateTimeOriginal || currentMetaData.exifData?.exif?.DateTimeOriginal.trim() === ''">
+    <div class="col">
+      <strong>Date Taken:</strong> {{currentMetaData.exifData?.exif?.DateTimeOriginal}}
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <strong>Taken By Steve or Tina?</strong> {{ourCamera}}
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <strong>Tags for Picture:</strong>&nbsp;&nbsp;<span *ngFor="let tag of currentMetaData.tags"><u>{{tag.tagName}}</u>&nbsp;</span>
+    </div>
+  </div>
+  <div class="row" [hidden]="!currentMetaData.exifData || !currentMetaData.exifData?.image || !currentMetaData.exifData?.image?.Make || !currentMetaData.exifData?.image?.Model">
+    <div class="col">
+      <strong>Camera:</strong> {{currentMetaData.exifData?.image?.Make}} / {{currentMetaData.exifData?.image?.Model}}
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <button [hidden]="showAddTagForm" (click)="viewAddTagForm()" type="button" class="btn btn-secondary m-1"><i class="fa fa-plus-square"></i> Show Add Tags</button>
+      <button [hidden]="!showAddTagForm" (click)="showAddTagForm = false" type="button" class="btn btn-secondary m-1"><i class="fa fa-minus-square-o"></i> Hide Add Tags</button>
+      <button type="button" class="btn btn-primary m-1" (click)="copyImageToClipboard()"><i class="fa fa-clipboard"></i> Copy Image</button>
+      <button type="button" class="btn btn-primary m-1" (click)="openImageInApp()"><i class="fa fa-open"></i> Open Image</button>
+      <button type="button" class="btn btn-danger m-1" (click)="deleteImage()"><i class="fa fa-trash"></i> Delete Image</button>
+    </div>
+  </div>
+  <div [hidden]="!showAddTagForm" class="row mb-2">
+    <label class="mr-2" for="newtag">New Tag:</label>
+    <input #tagInput (keyup)="filterItems($event)" class="mr-2" type="text" id="newtag" name="newtag" [(ngModel)]="newTag">
+    <button [disabled]="newTag === null || newTag.trim() === '' || tagNames.includes(newTag.trim().toUpperCase())" type="button" (click)="addTag()" class="btn btn-primary mr-1">Add Tag</button>
+    <button type="button" (click)="addTagsDirectly(['Cats', 'Funny Animal Pictures'])" class="btn btn-primary mr-1">Funny Cats</button>
+    <button type="button" (click)="addTagsDirectly(['Dogs', 'Funny Animal Pictures'])" class="btn btn-primary mr-1">Funny Dogs</button>
+    <button type="button" (click)="addTagsDirectly(['Zoo'])" class="btn btn-primary mr-1">Zoo</button>
+    <button type="button" (click)="addTagsDirectly(['Cardinals Football'])" class="btn btn-primary mr-1">Cardinals Football</button>
+    <button type="button" (click)="addTagsDirectly(['Pictures Taken By Steve or Tina'])" class="btn btn-primary mr-1">Our Picture</button>
+    <button type="button" (click)="showTagsPopup(['Mountains', 'Autumn Colors', 'Waterfalls', 'Wild Flowers', 'Snow Scenes', 'Green Scenes', 'Lakes and Ponds', 'River', 'Sunsets and Sunrises'], ['Mountains'])" class="btn btn-primary mr-1">Mountains</button>
+    <button type="button" (click)="showTagsPopup(['Brian', 'Brian School Events', 'Brian And Friends', 'Brian and Dad', 'Brian Young', 'Brian and Allyson', 'Tina and Brian', 'Family', 'Grandma and Brian', 'Grandpa and Brian', 'Mom and Dad', 'Mom', 'Dad', 'Tina', 'Steve', 'Steve and Tina', 'Steve and Dad', 'Steve and Mom', 'Tina and Susan', 'Steve and Tina Arizona Travels', 'Steve and Tina Wedding'], ['Brian', 'Family'])" class="btn btn-primary mr-1">Family</button>
+  </div>
+  <div [hidden]="!showAddTagForm" class="row mb-2">
+    <label [hidden]="!shownTags[tag.tagName]" *ngFor="let tag of tags" class="checkbox-inline">
+      <input class="ml-2" type="checkbox" name="{{tag.tagName}}" [checked]="tagFlags[tag.tagName]" (change)="updateTagFromUI($event.target.checked, tag.tagName)" /> {{tag.tagName}}
+    </label>
+  </div>
+</div>
