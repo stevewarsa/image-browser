@@ -5,11 +5,12 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+// Using this library: https://github.com/jesusbotella/ngx-lazy-load-images
+import { LazyLoadImagesModule } from 'ngx-lazy-load-images';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { OpenTagsComponent } from './open-tags/open-tags.component';
-import { LazyLoadDirective } from './lazy-load.directive';
 import { GridViewComponent } from './grid-view/grid-view.component';
 import { MainComponent } from './main/main.component';
 
@@ -19,7 +20,6 @@ import { MainComponent } from './main/main.component';
     AlertComponent,
     ConfirmComponent,
     OpenTagsComponent,
-    LazyLoadDirective,
     GridViewComponent,
     MainComponent
   ],
@@ -27,7 +27,8 @@ import { MainComponent } from './main/main.component';
     BrowserModule,
     AppRoutingModule,
     FormsModule,
-    NgbModule
+    NgbModule,
+    LazyLoadImagesModule
   ],
   providers: [],
   bootstrap: [AppComponent],

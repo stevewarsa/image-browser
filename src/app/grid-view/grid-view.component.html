@@ -9,8 +9,17 @@
     </div>
   </div>
   <div class="row" >
-    <div *ngFor="let img of filteredImageDataArray" class="col-4 card">
-      <img class="img-fluid" src="file:///{{img.fullPath}}">
+    <!-- Using this library: https://github.com/jesusbotella/ngx-lazy-load-images -->
+    <div lazy-load-images *ngFor="let img of filteredImageDataArray" class="col-4 card">
+      <img class="img-fluid" [attr.data-src]="'file:///' + img.fullPath">
+      <div class="card-body">
+        <p class="card-text">{{img.fullPath}}</p>
+        <div class="btn-group mr-3" role="group" aria-label="Primary Navigation">
+          <button type="button" class="btn btn-danger m-1" (click)="delete(img)"><i class="fa fa-trash"></i></button>
+          <button type="button" class="btn btn-primary m-1" (click)="copyImageToClipboard(img.fullPath)"><i class="fa fa-clipboard"></i></button>
+          <button type="button" class="btn btn-success m-1" (click)="openImageInApp(img.fullPath)"><i class="fa fa-folder-open-o"></i></button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
