@@ -4,7 +4,7 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 
 ## Here is a picture of the app:
 
-
+![Image Browser Screenshote](/image-browser-screenshot.png)  
 
 ## Development server
 
