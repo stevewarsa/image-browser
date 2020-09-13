@@ -5,6 +5,8 @@ import { AlertComponent } from './alert/alert.component';
 import { ConfirmComponent } from './confirm/confirm.component';
 import { Tag } from './tag';
 import { OpenTagsComponent } from './open-tags/open-tags.component';
+import { DeleteImagesComponent } from './delete-images/delete-images.component';
+import { ImageData } from './image-data';
 
 @Injectable({
   providedIn: 'root'
@@ -37,6 +39,13 @@ export class ModalHelperService {
     const userDetailsComp: OpenTagsComponent = modalRef.componentInstance as OpenTagsComponent;
     userDetailsComp.tags = tags;
     userDetailsComp.defaultSelected = defaultSelected;
+    return modalRef;
+  }
+
+  openDeleteImages(images: ImageData[]): NgbModalRef {
+    const modalRef: NgbModalRef = this.openModal(DeleteImagesComponent);
+    const deleteImagesComp: DeleteImagesComponent = modalRef.componentInstance as DeleteImagesComponent;
+    deleteImagesComp.imageArray = images;
     return modalRef;
   }
 

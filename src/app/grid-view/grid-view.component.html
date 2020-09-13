@@ -2,22 +2,38 @@
   {{busyMessage}}<br>
   <img src="assets/ajax-loader.gif" />
 </div>
-<div *ngIf="!busy && filteredImageDataArray && filteredImageDataArray.length > 0" class="container">
+<div *ngIf="!busy && showSelected" class="container">
+  <button type="button" class="btn btn-secondary" (click)="showSelected = false">Back to Grid</button>
+  <div class="row">
+    <ol>
+      <li *ngFor="let imagePath of obj.keys(imagesSelected)">
+        <p>{{imagePath}}</p>
+        <img class="img-fluid" [src]="'file:///' + imagePath"><br>
+        <button placement="left" [ngbTooltip]="'Delete Image'" type="button" class="btn btn-danger m-1" (click)="delete(imagesSelected[imagePath])"><i class="fa fa-trash"></i></button>
+      </li>
+    </ol>
+</div>
+</div>
+<div *ngIf="!busy && !showSelected && filteredImageDataArray && filteredImageDataArray.length > 0" class="container">
   <div class="btn-toolbar mb-3" role="toolbar" aria-label="Navigational controls">
     <div class="btn-group mr-3" role="group" aria-label="Historical Back">
         <button type="button" class="btn btn-secondary" (click)="back()">Back</button>
+        <button type="button" class="btn btn-danger" (click)="deleteSelected()"><i class="fa fa-trash"></i></button>
     </div>
   </div>
   <div class="row" >
     <!-- Using this library: https://github.com/jesusbotella/ngx-lazy-load-images -->
-    <div lazy-load-images *ngFor="let img of filteredImageDataArray" class="col-4 card">
+    <div [ngClass]="{'bg-dark': imagesSelected[img.fullPath] !== undefined && imagesSelected[img.fullPath]}" 
+      lazy-load-images *ngFor="let img of filteredImageDataArray" class="col-4 card">
+
       <img class="img-fluid" [attr.data-src]="'file:///' + img.fullPath">
       <div class="card-body">
         <p class="card-text">{{img.fullPath}}</p>
         <div class="btn-group mr-3" role="group" aria-label="Primary Navigation">
-          <button type="button" class="btn btn-danger m-1" (click)="delete(img)"><i class="fa fa-trash"></i></button>
-          <button type="button" class="btn btn-primary m-1" (click)="copyImageToClipboard(img.fullPath)"><i class="fa fa-clipboard"></i></button>
-          <button type="button" class="btn btn-success m-1" (click)="openImageInApp(img.fullPath)"><i class="fa fa-folder-open-o"></i></button>
+          <button placement="left" [ngbTooltip]="'Delete Image'" type="button" class="btn btn-danger m-1" (click)="delete(img)"><i class="fa fa-trash"></i></button>
+          <button placement="left" [ngbTooltip]="'Copy Image to Clipboard'" type="button" class="btn btn-primary m-1" (click)="copyImageToClipboard(img.fullPath)"><i class="fa fa-clipboard"></i></button>
+          <button placement="left" [ngbTooltip]="'Open Image in App'" type="button" class="btn btn-success m-1" (click)="openImageInApp(img.fullPath)"><i class="fa fa-folder-open-o"></i></button>
+          <button placement="left" [ngbTooltip]="'Select for Compare'" type="button" class="btn btn-success m-1" (click)="selectForCompare(img)"><i class="fa fa-check-square"></i></button>
         </div>
       </div>
     </div>

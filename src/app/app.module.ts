@@ -13,6 +13,7 @@ import { AppComponent } from './app.component';
 import { OpenTagsComponent } from './open-tags/open-tags.component';
 import { GridViewComponent } from './grid-view/grid-view.component';
 import { MainComponent } from './main/main.component';
+import { DeleteImagesComponent } from './delete-images/delete-images.component';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,8 @@ import { MainComponent } from './main/main.component';
     ConfirmComponent,
     OpenTagsComponent,
     GridViewComponent,
-    MainComponent
+    MainComponent,
+    DeleteImagesComponent
   ],
   imports: [
     BrowserModule,
@@ -35,7 +37,8 @@ import { MainComponent } from './main/main.component';
   entryComponents: [
     OpenTagsComponent,
     ConfirmComponent, 
-    AlertComponent
+    AlertComponent,
+    DeleteImagesComponent
   ]
 })
 export class AppModule { }

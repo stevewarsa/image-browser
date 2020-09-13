@@ -14,6 +14,9 @@ export class GridViewComponent implements OnInit {
   imageDataArray: ImageData[] = [];
   busy: boolean = false;
   busyMessage: string = null;
+  imagesSelected: {[imageFullPath: string]: ImageData} = {};
+  showSelected = false;
+  obj = Object;
 
   constructor(private fileService: FileService, private modalHelperService: ModalHelperService, private route: Router) { }
 
@@ -45,15 +48,14 @@ export class GridViewComponent implements OnInit {
           console.log("Here are the messages back from the 2 operations:");
           console.log(messages);
           console.log("Now removing the elements from the array...");
-          let elementPos = this.imageDataArray.map((x) => {
-            return x.id; 
-          }).indexOf(img.id);
+          let elementPos = this.imageDataArray.map(x => x.id).indexOf(img.id);
           let currentImagePath: string = img.fullPath;
           this.imageDataArray.splice(elementPos, 1);
-          elementPos = this.filteredImageDataArray.map((x) => {
-            return x.id; 
-          }).indexOf(img.id);
+          elementPos = this.filteredImageDataArray.map(x => x.id).indexOf(img.id);
           this.filteredImageDataArray.splice(elementPos, 1);
+          this.imagesSelected[img.fullPath] = null;
+          delete this.imagesSelected[img.fullPath];
+          this.showSelected = false;
           this.modalHelperService.alert({message: currentImagePath + " has been deleted!"});
         }
       });
@@ -73,5 +75,43 @@ export class GridViewComponent implements OnInit {
     this.fileService.openImageInApp(imgPath).then((response: string) => {
       console.log("Response from opening image: " + response);
     });
+  }
+
+  selectForCompare(img: ImageData) {
+    if (this.imagesSelected[img.fullPath] === undefined || !this.imagesSelected[img.fullPath]) {
+      // the image didn't exist in the map yet, so add it
+      this.imagesSelected[img.fullPath] = img;
+      this.showSelected = true;
+    } else {
+      // image already exists in the map, so remove it
+      delete this.imagesSelected[img.fullPath];
+    }
+  }
+
+  deleteSelected() {
+    let filePaths = Object.keys(this.imagesSelected);
+    let filePathsSelected: string[] = [];
+    let imagesSelected: ImageData[] = [];
+    for (let filePath of filePaths) {
+      if (this.imagesSelected[filePath]) {
+        filePathsSelected.push(filePath);
+        imagesSelected.push(this.imagesSelected[filePath]);
+      }
+    }
+    if (filePathsSelected.length > 0) {
+      console.log("Deleting the following files:");
+      console.log(filePathsSelected);
+      this.modalHelperService.openDeleteImages(imagesSelected).result.then((imagesDeleted: ImageData[]) => {
+        if (imagesDeleted) {
+          for (let img of imagesDeleted) {
+            console.log("Now removing the elements from the array...");
+            let elementPos = this.imageDataArray.map(x => x.id).indexOf(img.id);
+            this.imageDataArray.splice(elementPos, 1);
+            elementPos = this.filteredImageDataArray.map(x => x.id).indexOf(img.id);
+            this.filteredImageDataArray.splice(elementPos, 1);
+          }
+        }
+      });
+    }
   }
 }

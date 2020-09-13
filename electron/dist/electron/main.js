@@ -26,7 +26,7 @@ function createWindow() {
         slashes: true
     }));
     win.setMenu(null);
-    //win.webContents.openDevTools();
+    win.webContents.openDevTools();
     win.maximize();
     win.on("closed", function () {
         win = null;

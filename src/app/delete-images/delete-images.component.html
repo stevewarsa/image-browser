@@ -1,0 +1,42 @@
+<div class="modal-header">
+  <h4 class="modal-title">
+    <span class="mr-1 fa fa-edit"></span>Delete Images</h4>
+  <button type="button" class="close" aria-label="Close" (click)="activeModal.dismiss('Cross Click')">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body">
+  <div *ngIf="busy" class="container m-3">
+    {{busyMessage}}<br>
+    <img src="assets/ajax-loader.gif" />
+  </div>
+  <div *ngIf="!busy" class="container">
+    <div class="row mb-2">
+      <ol>
+        <li *ngFor="let image of imageArray">
+          <p>{{image.fullPath}}</p>
+          <img class="img-fluid" style="max-height: 100px;" [src]="'file:///' + image.fullPath">
+        </li>
+      </ol>
+    </div>
+    <div *ngIf="errorMessages && errorMessages.length > 0" class="row">
+      <p *ngFor="let errorMsg of errorMessages">{{errorMsg}}</p>
+    </div>
+    <div *ngIf="!confirm" class="row">
+      <div class="col">
+        <button class="btn btn-danger mr-2" (click)="confirm = true"><i class="fa fa-trash"></i> Delete</button>
+      </div>
+    </div>
+    <div *ngIf="confirm" class="row">
+      <div class="col">
+        <p>Are you sure you would like to delete these {{imageArray.length}} images?</p>
+        <div class="row">
+          <div class="col">
+            <button class="btn btn-danger mr-2" (click)="doDelete()"><i class="fa fa-trash"></i> Yes</button>
+            <button class="btn btn-secondary" (click)="confirm = false">No</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
