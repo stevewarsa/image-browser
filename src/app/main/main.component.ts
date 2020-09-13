@@ -215,6 +215,19 @@ export class MainComponent implements OnInit {
     this.next();
   }
 
+  findDups() {
+    let dups: {[fileName: string]: ImageData[]} = {};
+    this.filteredImageDataArray.forEach(img => dups[img.fileName] ? dups[img.fileName].push(img) : dups[img.fileName] = [img]);
+    let temp = this.filteredImageDataArray.filter(img => dups[img.fileName].length > 1);
+    if (temp && temp.length > 0) {
+      this.filteredImageDataArray = temp;
+      this.currentIndex = -1;
+      this.next();
+    } else {
+      this.modalHelperService.alert({message: "No duplicates where found for the selected image set"});
+    }
+  }
+
   addTagsDirectly(tags: string[]) {
     let tagsToSend: Tag[] = this.tags.filter((tag: Tag) => tags.includes(tag.tagName));
     tagsToSend.forEach((tag: Tag) => this.tagFlags[tag.tagName] = true);

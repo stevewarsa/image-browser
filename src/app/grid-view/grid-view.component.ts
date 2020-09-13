@@ -56,7 +56,7 @@ export class GridViewComponent implements OnInit {
           this.imagesSelected[img.fullPath] = null;
           delete this.imagesSelected[img.fullPath];
           this.showSelected = false;
-          this.modalHelperService.alert({message: currentImagePath + " has been deleted!"});
+          //this.modalHelperService.alert({message: currentImagePath + " has been deleted!"});
         }
       });
     },

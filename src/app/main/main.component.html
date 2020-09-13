@@ -15,17 +15,18 @@
     </div>
     <div class="btn-group mr-3" role="group" aria-label="Other commands">
       <!-- <button type="button" class="btn btn-primary m-1" (click)="getImageDetails()"><i class="fa fa-address-card-o"></i> Details</button> -->
-      <button [hidden]="showForm" (click)="viewForm()" type="button" class="btn btn-secondary m-1"><i class="fa fa-plus-square"></i> Show Included Tags</button>
-      <button [hidden]="!showForm" (click)="showForm = false" type="button" class="btn btn-secondary m-1"><i class="fa fa-minus-square-o"></i> Hide Included Tags</button>
-      <button [hidden]="showExcludeForm" (click)="viewExcludeForm()" type="button" class="btn btn-secondary m-1"><i class="fa fa-plus-square"></i> Show Excluded Tags</button>
-      <button [hidden]="!showExcludeForm" (click)="showExcludeForm = false" type="button" class="btn btn-secondary m-1"><i class="fa fa-minus-square-o"></i> Hide Excluded Tags</button>
-      <button [hidden]="filteredImageDataArray?.length === imageDataArray?.length" (click)="clearFilters()" type="button" class="btn btn-info m-1">
+      <button placement="left" [ngbTooltip]="'Show Included Tags'" [hidden]="showForm" (click)="viewForm()" type="button" class="btn btn-secondary m-1"><i class="fa fa-plus-square"></i></button>
+      <button placement="left" [ngbTooltip]="'Hide Included Tags'" [hidden]="!showForm" (click)="showForm = false" type="button" class="btn btn-secondary m-1"><i class="fa fa-minus-square-o"></i></button>
+      <button placement="left" [ngbTooltip]="'Show Excluded Tags'" [hidden]="showExcludeForm" (click)="viewExcludeForm()" type="button" class="btn btn-secondary m-1"><i class="fa fa-plus-square"></i></button>
+      <button placement="left" [ngbTooltip]="'Hide Excluded Tags'" [hidden]="!showExcludeForm" (click)="showExcludeForm = false" type="button" class="btn btn-secondary m-1"><i class="fa fa-minus-square-o"></i></button>
+      <button placement="left" [ngbTooltip]="'Clear Filters'" [hidden]="filteredImageDataArray?.length === imageDataArray?.length" (click)="clearFilters()" type="button" class="btn btn-info m-1">
         <span class="fa-stack fa-2x">
           <i class="fa fa-filter fa-stack-1x"></i>
           <i class="fa fa-ban fa-stack-2x" style="color:Tomato"></i>
         </span> 
         Clear Filters
       </button>
+      <button placement="left" [ngbTooltip]="'Find Duplicates'" (click)="findDups()" type="button" class="btn btn-secondary m-1"><i class="fa fa-balance-scale"></i></button>
     </div>
   </div>
   <form [hidden]="!showForm" class="mr-3 mb-2">
