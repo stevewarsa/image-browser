@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FileService } from '../file.service';
 import { ModalHelperService } from '../modal-helper.service';
 import { Router } from '@angular/router';
@@ -9,7 +9,7 @@ import { ImageData } from '../image-data';
   templateUrl: './grid-view.component.html',
   styleUrls: ['./grid-view.component.css']
 })
-export class GridViewComponent implements OnInit {
+export class GridViewComponent implements OnInit, OnDestroy {
   filteredImageDataArray: ImageData[] = [];
   imageDataArray: ImageData[] = [];
   busy: boolean = false;
@@ -17,6 +17,7 @@ export class GridViewComponent implements OnInit {
   imagesSelected: {[imageFullPath: string]: ImageData} = {};
   showSelected = false;
   obj = Object;
+  imagesDeleted = false;
 
   constructor(private fileService: FileService, private modalHelperService: ModalHelperService, private route: Router) { }
 
@@ -31,6 +32,13 @@ export class GridViewComponent implements OnInit {
     this.imageDataArray = this.fileService.imageDataArray;
     this.busy = false;
     this.busyMessage = null;
+  }
+  ngOnDestroy(): void {
+    if (this.imagesDeleted) {
+      // clear out the cache so that the main screen will lookup all the images again...
+      this.fileService.imageDataArray = null;
+      this.fileService.filteredImageDataArray = null;
+    }
   }
 
   back() {
@@ -49,14 +57,13 @@ export class GridViewComponent implements OnInit {
           console.log(messages);
           console.log("Now removing the elements from the array...");
           let elementPos = this.imageDataArray.map(x => x.id).indexOf(img.id);
-          let currentImagePath: string = img.fullPath;
           this.imageDataArray.splice(elementPos, 1);
           elementPos = this.filteredImageDataArray.map(x => x.id).indexOf(img.id);
           this.filteredImageDataArray.splice(elementPos, 1);
           this.imagesSelected[img.fullPath] = null;
           delete this.imagesSelected[img.fullPath];
           this.showSelected = false;
-          //this.modalHelperService.alert({message: currentImagePath + " has been deleted!"});
+          this.imagesDeleted = true;
         }
       });
     },
@@ -81,7 +88,7 @@ export class GridViewComponent implements OnInit {
     if (this.imagesSelected[img.fullPath] === undefined || !this.imagesSelected[img.fullPath]) {
       // the image didn't exist in the map yet, so add it
       this.imagesSelected[img.fullPath] = img;
-      this.showSelected = true;
+      //this.showSelected = true;
     } else {
       // image already exists in the map, so remove it
       delete this.imagesSelected[img.fullPath];
@@ -110,6 +117,7 @@ export class GridViewComponent implements OnInit {
             elementPos = this.filteredImageDataArray.map(x => x.id).indexOf(img.id);
             this.filteredImageDataArray.splice(elementPos, 1);
           }
+          this.imagesDeleted = true;
         }
       });
     }
