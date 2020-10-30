@@ -136,38 +136,15 @@ export class SimpleViewComponent implements OnInit {
       return;
     } else {
       console.log("There are " + numberIncludedChecked + " tags checked for include");
-    }
-    let imagesIncluded: ImageData[] = null;
-    if (numberIncludedChecked > 0) {
-      imagesIncluded = this.imageDataArray.filter((img: ImageData) => {
-        if (this.filterMode === "all") {
-          let matchedAll: boolean = true;
-          // go through each of the tags that have been selected for
-          // filter. If the current image doesn't include each and
-          // every tag, it is considered "not matched".
-          for (let tag of checkedIncludeTags) {
-            if (!img.tags.map(tg => tg.tagName).includes(tag)) {
-              matchedAll = false;
-              break;
-            }
-          }
-          // only if the current image matched all tags, do we return it
-          if (matchedAll) {
+      let imagesIncluded: ImageData[] = this.imageDataArray.filter((img: ImageData) => {
+        // filter mode is assumed to be "any", so it only needs to match one
+        // of the selected tags in order to be returned
+        for (let tag of img.tags) {
+          if (this.filterImageFlags[tag.tagName]) {
             return img;
-          }
-        } else {
-          // filter mode is assumed to be "any", so it only needs to match one
-          // of the selected tags in order to be returned
-          for (let tag of img.tags) {
-            if (this.filterImageFlags[tag.tagName]) {
-              return img;
-            }
           }
         }
       });
-    } else {
-      // if nothing is checked for include, then include all images
-      imagesIncluded = this.imageDataArray.slice();
     }
 
     if (!this.filteredImageDataArray || this.filteredImageDataArray.length === 0) {
