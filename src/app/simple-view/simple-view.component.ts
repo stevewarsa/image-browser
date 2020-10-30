@@ -136,7 +136,7 @@ export class SimpleViewComponent implements OnInit {
       return;
     } else {
       console.log("There are " + numberIncludedChecked + " tags checked for include");
-      let imagesIncluded: ImageData[] = this.imageDataArray.filter((img: ImageData) => {
+      this.filteredImageDataArray = this.imageDataArray.filter((img: ImageData) => {
         // filter mode is assumed to be "any", so it only needs to match one
         // of the selected tags in order to be returned
         for (let tag of img.tags) {
