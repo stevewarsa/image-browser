@@ -14,6 +14,7 @@ import { OpenTagsComponent } from './open-tags/open-tags.component';
 import { GridViewComponent } from './grid-view/grid-view.component';
 import { MainComponent } from './main/main.component';
 import { DeleteImagesComponent } from './delete-images/delete-images.component';
+import { SimpleViewComponent } from './simple-view/simple-view.component';
 
 @NgModule({
   declarations: [
@@ -23,7 +24,8 @@ import { DeleteImagesComponent } from './delete-images/delete-images.component';
     OpenTagsComponent,
     GridViewComponent,
     MainComponent,
-    DeleteImagesComponent
+    DeleteImagesComponent,
+    SimpleViewComponent
   ],
   imports: [
     BrowserModule,

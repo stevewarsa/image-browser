@@ -146,7 +146,7 @@ ipcMain.on("getTagId", (event, tagName) => {
         tagId = row['id'];
         break;
       }
-      win.webContents.send("getTagIdResponse", tagId);  
+      win.webContents.send("getTagIdResponse", tagId);
     } else {
       win.webContents.send("getTagIdResponse", "Error with query: " + err);
     }
@@ -250,7 +250,7 @@ function runSqlStatement(sql: string, args:string[], callback) {
   //console.log("and arguments: ");
   //console.log(args);
   let results = null;
-  executeDb(database => database.query(sql, args).then(rows => { 
+  executeDb(database => database.query(sql, args).then(rows => {
       results = rows;
     })
   ).then(() => {

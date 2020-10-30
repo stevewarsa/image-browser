@@ -11,6 +11,7 @@ import { Router } from '@angular/router';
   styleUrls: ['./main.component.css']
 })
 export class MainComponent implements OnInit {
+  mode = "simple"; // or advanced
   busy: boolean = true;
   busyMessage: string = null;
   currentIndex: number = -1;
