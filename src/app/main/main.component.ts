@@ -24,7 +24,7 @@ export class MainComponent implements OnInit {
   imageDataArray: ImageData[] = [];
   filteredImageDataArray: ImageData[] = [];
   tagFlags: {[tagName:string]: boolean} = {};
-  filterMode: string = "all"; 
+  filterMode: string = "all";
   showForm: boolean = false;
   showAddTagForm: boolean = false;
   showExcludeForm: boolean = false;
@@ -50,7 +50,7 @@ export class MainComponent implements OnInit {
       this.filteredImageDataArray = tmpFilteredImgDataArray;
       this.fileService.getTags().then((tags: Tag[]) => {
         tags.forEach(tg => this.tags.push(tg));
-        this.tags.forEach(tag => { 
+        this.tags.forEach(tag => {
           this.shownTags[tag.tagName] = true;
           this.shownTagsForFilterTags[tag.tagName] = true;
           this.shownTagsForExcludeTags[tag.tagName] = true;
@@ -65,8 +65,8 @@ export class MainComponent implements OnInit {
       this.busyMessage = "Retrieving all the images ...";
       let dirPath = "C:/backup/pictures";
       Promise.all([
-        this.fileService.getTags(), 
-        this.fileService.getAllImageData(), 
+        this.fileService.getTags(),
+        this.fileService.getAllImageData(),
         this.fileService.getFiles(dirPath)
       ]).then((results: any[]) => {
         results[0].forEach(tg => {
@@ -75,12 +75,12 @@ export class MainComponent implements OnInit {
         let allImageData: {[fullPath:string]: ImageData} = results[1];
         let files: string[] = results[2];
         let filesFound = files.filter(
-          file => !file.toLowerCase().endsWith(".db") 
-                && !file.toLowerCase().endsWith(".mp4") 
-                && !file.toLowerCase().endsWith(".3gp") 
+          file => !file.toLowerCase().endsWith(".db")
+                && !file.toLowerCase().endsWith(".mp4")
+                && !file.toLowerCase().endsWith(".3gp")
                 && !file.toLowerCase().endsWith(".docx")
                 && !file.toLowerCase().endsWith(".ico")
-                && !file.toLowerCase().endsWith(".wlmp") 
+                && !file.toLowerCase().endsWith(".wlmp")
                 && !file.toLowerCase().endsWith(".mov"));
         filesFound.forEach(fullFilePath => {
           let img: ImageData = allImageData[fullFilePath];
@@ -95,13 +95,13 @@ export class MainComponent implements OnInit {
         });
         // creat a shallow copy of this array, so that we can use it for filtering
         this.filteredImageDataArray = this.imageDataArray.slice();
-        this.tags.forEach(tag => { 
+        this.tags.forEach(tag => {
           this.shownTags[tag.tagName] = true;
           this.shownTagsForFilterTags[tag.tagName] = true;
           this.shownTagsForExcludeTags[tag.tagName] = true;
           this.tagNames.push(tag.tagName.toUpperCase());
         });
-        
+
         this.next();
         this.busy = false;
         this.busyMessage = null;
@@ -112,21 +112,21 @@ export class MainComponent implements OnInit {
   filterItems(event: any) {
     let searchString = event.target.value.toUpperCase().trim();
     Object.keys(this.shownTags).map((key, index) => {
-        this.shownTags[key] = key.toUpperCase().includes(searchString); 
+        this.shownTags[key] = key.toUpperCase().includes(searchString);
     });
   }
 
   filterTagsForFilter(value: any) {
     let searchString = value.toUpperCase().trim();
     Object.keys(this.shownTagsForFilterTags).map((key, index) => {
-        this.shownTagsForFilterTags[key] = key.toUpperCase().includes(searchString); 
+        this.shownTagsForFilterTags[key] = key.toUpperCase().includes(searchString);
     });
   }
 
   filterTagsForExclude(value: any) {
     let searchString = value.toUpperCase().trim();
     Object.keys(this.shownTagsForExcludeTags).map((key, index) => {
-        this.shownTagsForExcludeTags[key] = key.toUpperCase().includes(searchString); 
+        this.shownTagsForExcludeTags[key] = key.toUpperCase().includes(searchString);
     });
   }
 
@@ -152,8 +152,8 @@ export class MainComponent implements OnInit {
       imagesIncluded = this.imageDataArray.filter((img: ImageData) => {
         if (this.filterMode === "all") {
           let matchedAll: boolean = true;
-          // go through each of the tags that have been selected for 
-          // filter. If the current image doesn't include each and 
+          // go through each of the tags that have been selected for
+          // filter. If the current image doesn't include each and
           // every tag, it is considered "not matched".
           for (let tag of checkedIncludeTags) {
             if (!img.tags.map(tg => tg.tagName).includes(tag)) {
@@ -166,7 +166,7 @@ export class MainComponent implements OnInit {
             return img;
           }
         } else {
-          // filter mode is assumed to be "any", so it only needs to match one 
+          // filter mode is assumed to be "any", so it only needs to match one
           // of the selected tags in order to be returned
           for (let tag of img.tags) {
             if (this.filterImageFlags[tag.tagName]) {
@@ -246,7 +246,7 @@ export class MainComponent implements OnInit {
   }
 
   clearFilters() {
-    this.tags.forEach(tag => { 
+    this.tags.forEach(tag => {
       this.filterImageFlags[tag.tagName] = false;
       this.excludeImageFlags[tag.tagName] = false;
     });
@@ -309,7 +309,7 @@ export class MainComponent implements OnInit {
           console.log(messages);
           console.log("Now removing the elements from the array...");
           let elementPos = this.imageDataArray.map((x) => {
-            return x.id; 
+            return x.id;
           }).indexOf(this.currentMetaData.id);
           let currentImagePath: string = this.currentMetaData.fullPath;
           this.imageDataArray.splice(elementPos, 1);
@@ -366,7 +366,7 @@ export class MainComponent implements OnInit {
 
   private updateUiAfterNavigate() {
     console.log("Entering updateUiAfterNavigate...");
-    this.tags.forEach(tag => { 
+    this.tags.forEach(tag => {
       this.tagFlags[tag.tagName] = false;
     });
     if (!this.currentMetaData) {
@@ -395,7 +395,7 @@ export class MainComponent implements OnInit {
       }
     });
     this.newTag = null;
-    this.tags.forEach(tag => { 
+    this.tags.forEach(tag => {
       this.shownTags[tag.tagName] = true;
     });
     this.focusTagInput();
@@ -464,7 +464,7 @@ export class MainComponent implements OnInit {
               // now make sure the new tag shows up as checked
               this.tagFlags[newTag.tagName] = true;
               this.newTag = null;
-              this.tags.forEach(tag => { 
+              this.tags.forEach(tag => {
                 this.shownTags[tag.tagName] = true;
               });
               this.applyTags();
@@ -530,7 +530,7 @@ export class MainComponent implements OnInit {
       this.deleteImageTags();
     }
     // this.newTag = null;
-    // this.tags.forEach(tag => { 
+    // this.tags.forEach(tag => {
     //   this.shownTags[tag.tagName] = true;
     // });
     this.focusTagInput();
@@ -549,5 +549,9 @@ export class MainComponent implements OnInit {
       console.log("Finished saving image_tag records, here is the response: ");
       console.log(result);
     });
+  }
+
+  simpleView() {
+    this.route.navigate(['']);
   }
 }

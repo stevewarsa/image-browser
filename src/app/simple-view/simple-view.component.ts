@@ -23,7 +23,7 @@ export class SimpleViewComponent implements OnInit {
   tagFlags: {[tagName:string]: boolean} = {};
   shownTagsForFilterTags: {[tagName:string]: boolean} = {};
   filterImageFlags: {[tagName:string]: boolean} = {};
-  filterMode: string = "all";
+  showMoreButtons: boolean = false;
 
   constructor(private fileService: FileService, private route: Router, private modalHelperService: ModalHelperService) { }
 
@@ -123,6 +123,7 @@ export class SimpleViewComponent implements OnInit {
     console.log("Setting tag " + tagName + " to " + (checked ? "Selected" : "Unselected") + "...");
     this.filterImageFlags[tagName] = checked;
     this.filterImages();
+    this.gotoTop();
   }
   filterImages() {
     let checkedIncludeTags: string[] = Object.keys(this.filterImageFlags).filter(key => this.filterImageFlags[key]);
@@ -166,6 +167,57 @@ export class SimpleViewComponent implements OnInit {
     this.filteredImageDataArray = this.imageDataArray.slice();
     this.currentIndex = -1;
     this.next();
+  }
+
+  deleteImage() {
+    this.modalHelperService.confirm({message: "Are you sure you would like to delete the current image?", header: "Delete Image?", labels:["Delete", "Keep"]}).result.then((value: any) => {
+        console.log("User chose to delete the current image: " + this.currentMetaData.fullPath);
+        this.fileService.deleteFile(this.currentMetaData.fullPath).then((response: string) => {
+          if (response.startsWith("Error")) {
+            this.modalHelperService.alert({message: response});
+          } else {
+            let messages:string[] = this.fileService.deleteImage(this.currentMetaData.id);
+            console.log("Here are the messages back from the 2 operations:");
+            console.log(messages);
+            console.log("Now removing the elements from the array...");
+            let elementPos = this.imageDataArray.map((x) => {
+              return x.id;
+            }).indexOf(this.currentMetaData.id);
+            let currentImagePath: string = this.currentMetaData.fullPath;
+            this.imageDataArray.splice(elementPos, 1);
+            this.filteredImageDataArray.splice(this.currentIndex, 1);
+            this.next();
+            this.modalHelperService.alert({message: currentImagePath + " has been deleted!"});
+          }
+        });
+      },
+      () => {
+        console.log("User chose not to delete the current image");
+      });
+  }
+
+  copyImageToClipboard() {
+    this.fileService.copyImageToClipboard(this.filteredImageDataArray[this.currentIndex].fullPath).then((response: string) => {
+      console.log("Response from copying image: " + response);
+    });
+  }
+
+  openImageInApp() {
+    this.fileService.openImageInApp(this.filteredImageDataArray[this.currentIndex].fullPath).then((response: string) => {
+      console.log("Response from opening image: " + response);
+    });
+  }
+
+  advancedView() {
+    this.route.navigate(['main']);
+  }
+
+  private gotoTop() {
+    window.scroll({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    });
   }
 
   private updateUiAfterNavigate() {

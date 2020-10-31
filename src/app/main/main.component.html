@@ -11,7 +11,8 @@
       <button type="button" class="btn btn-danger m-1" (click)="prev()"><i class="fa fa-arrow-circle-left"></i> Prev</button>
       <button type="button" class="btn btn-success m-1" (click)="doRandom()"><i class="fa fa-random"></i> Random</button>
       <button type="button" class="btn btn-danger m-1" (click)="next()"><i class="fa fa-arrow-circle-right"></i> Next</button>
-      <button type="button" class="btn btn-info m-1" (click)="gridView()"><i class="fa fa-th"></i></button>
+      <button placement="left" [ngbTooltip]="'Grid View'" type="button" class="btn btn-info m-1" (click)="gridView()"><i class="fa fa-th"></i></button>
+      <button placement="left" [ngbTooltip]="'Simple View'" type="button" class="btn btn-info m-1" (click)="simpleView()"><i class="fa fa-archive"></i></button>
     </div>
     <div class="btn-group mr-3" role="group" aria-label="Other commands">
       <!-- <button type="button" class="btn btn-primary m-1" (click)="getImageDetails()"><i class="fa fa-address-card-o"></i> Details</button> -->
@@ -23,7 +24,7 @@
         <span class="fa-stack fa-2x">
           <i class="fa fa-filter fa-stack-1x"></i>
           <i class="fa fa-ban fa-stack-2x" style="color:Tomato"></i>
-        </span> 
+        </span>
         Clear Filters
       </button>
       <button placement="left" [ngbTooltip]="'Find Duplicates'" (click)="findDups()" type="button" class="btn btn-secondary m-1"><i class="fa fa-balance-scale"></i></button>
@@ -31,14 +32,14 @@
   </div>
   <form [hidden]="!showForm" class="mr-3 mb-2">
     <h2>Check the tags you want to see</h2>
-    <h4><em><u>ANY</u></em> means as long as the image has any of the checked tags, it will be shown.  <em><u>ALL</u></em> means the image must have ALL of the tags checked for it to be shown. 
+    <h4><em><u>ANY</u></em> means as long as the image has any of the checked tags, it will be shown.  <em><u>ALL</u></em> means the image must have ALL of the tags checked for it to be shown.
       Note that if none of the tags are checked then all images will be shown, except those that are excluded.
     </h4>
     <div class="form-group">
-      <label class="radio-inline"> 
+      <label class="radio-inline">
         <input type="radio" name="filter_mode" value="any" [(ngModel)]="filterMode"> ANY
       </label>
-      <label class="radio-inline"> 
+      <label class="radio-inline">
         <input class="ml-2" type="radio" name="filter_mode" value="all" [(ngModel)]="filterMode"> ALL
       </label>
       <input #filterTagInputInForm (keyup)="filterTagsForFilter($event.target.value)" class="m-2" type="text" id="filtertagsforfilter" name="filtertagsforfilter">

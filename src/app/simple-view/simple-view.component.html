@@ -3,32 +3,55 @@
   <img src="assets/ajax-loader.gif" />
 </div>
 <div *ngIf="!busy && filteredImageDataArray && filteredImageDataArray.length > 0" class="container">
-  <div class="btn-toolbar mb-3" role="toolbar" aria-label="Navigational controls">
-    <div class="btn-group mr-3" role="group" aria-label="Primary Navigation">
-      <button type="button" class="btn btn-danger m-1" (click)="prev()"><i class="fa fa-arrow-circle-left"></i> Prev</button>
-      <button type="button" class="btn btn-success m-1" (click)="doRandom()"><i class="fa fa-random"></i> Random</button>
-      <button type="button" class="btn btn-danger m-1" (click)="next()"><i class="fa fa-arrow-circle-right"></i> Next</button>
-      <button type="button" class="btn btn-info m-1" (click)="gridView()"><i class="fa fa-th"></i></button>
-    </div>
-  </div>
   <div class="row">
     <div class="col">
       <img style="max-width: 100%; min-height: 600px; max-height: 600px;" src="file:///{{currentMetaData.fullPath}}">
     </div>
   </div>
-  <div class="row">
-    <div class="col">
-      (index={{(currentIndex + 1)}} of {{filteredImageDataArray.length}}) File Path: {{currentMetaData.fullPath}}
+  <div class="btn-toolbar mb-3" role="toolbar" aria-label="Navigational controls">
+    <div class="btn-group mr-3" role="group" aria-label="Primary Navigation">
+      <button type="button" class="btn btn-danger m-1" (click)="prev()"><i class="fa fa-arrow-circle-left"></i> Prev</button>
+      <button type="button" class="btn btn-success m-1" (click)="doRandom()"><i class="fa fa-random"></i> Random</button>
+      <button type="button" class="btn btn-danger m-1" (click)="next()"><i class="fa fa-arrow-circle-right"></i> Next</button>
+      <button placement="left" [ngbTooltip]="showMoreButtons ? 'Less Buttons' : 'More Buttons'" type="button" class="btn btn-secondary m-1" (click)="showMoreButtons = !showMoreButtons"><i [ngClass]="{'fa-ellipsis-v': !showMoreButtons, 'fa-chevron-left': showMoreButtons}" class="fa"></i></button>
+      <button [hidden]="!showMoreButtons" placement="left" [ngbTooltip]="'Copy Image'" type="button" class="btn btn-primary m-1" (click)="copyImageToClipboard()"><i class="fa fa-clipboard"></i></button>
+      <button [hidden]="!showMoreButtons" placement="left" [ngbTooltip]="'Open Image in App'" type="button" class="btn btn-primary m-1" (click)="openImageInApp()"><i class="fa fa-folder-open-o"></i></button>
+      <button [hidden]="!showMoreButtons" placement="left" [ngbTooltip]="'Delete Image'" type="button" class="btn btn-danger m-1" (click)="deleteImage()"><i class="fa fa-trash"></i></button>
+      <button [hidden]="!showMoreButtons" type="button" class="btn btn-secondary m-1" (click)="advancedView()"><i class="fa fa-adjust"></i> Advanced...</button>
     </div>
   </div>
-  <div class="row" [hidden]="!currentMetaData.exifData || !currentMetaData.exifData?.exif || !currentMetaData.exifData?.exif?.DateTimeOriginal || currentMetaData.exifData?.exif?.DateTimeOriginal.trim() === ''">
+  <div class="row mb-3">
+    <div class="col text-xl-left text-success">
+      <strong>({{(currentIndex + 1)}} of {{filteredImageDataArray.length}})</strong>
+    </div>
+  </div>
+  <div [hidden]="!showMoreButtons" class="row">
+    <div class="col">
+      <strong>File Path</strong>: {{currentMetaData.fullPath}}
+    </div>
+  </div>
+  <div class="row" [hidden]="!showMoreButtons || !currentMetaData.exifData || !currentMetaData.exifData?.exif || !currentMetaData.exifData?.exif?.DateTimeOriginal || currentMetaData.exifData?.exif?.DateTimeOriginal.trim() === ''">
     <div class="col">
       <strong>Date Taken:</strong> {{currentMetaData.exifData?.exif?.DateTimeOriginal}}
     </div>
   </div>
+  <div [hidden]="!showMoreButtons" class="row">
+    <div class="col">
+      <strong>Tags for this image</strong>:
+      <ol *ngIf="currentMetaData.tags.length > 0">
+        <li *ngFor="let tag of currentMetaData.tags">{{tag.tagName}}</li>
+      </ol>
+      <p *ngIf="currentMetaData.tags.length === 0">No Tags Yet</p>
+    </div>
+  </div>
+  <mat-chip-list aria-label="Selected Tags">
+    <mat-chip [hidden]="!item.value" class="mb-3" *ngFor="let item of filterImageFlags | keyvalue" [selectable]="false"
+              [removable]="true" (removed)="selectTagForFilter(false, item.key)">
+      {{item.key}}
+      <mat-icon matChipRemove>cancel</mat-icon>
+    </mat-chip>
+  </mat-chip-list>
   <div class="row">
-    <label *ngFor="let tag of tags" class="checkbox-inline">
-      <input class="ml-2" type="checkbox" name="{{tag.tagName}}" (change)="selectTagForFilter($event.target.checked, tag.tagName)" [checked]="filterImageFlags[tag.tagName]" /> {{tag.tagName}}
-    </label>
+    <button [hidden]="filterImageFlags[tag.tagName]" *ngFor="let tag of tags" class="btn btn-primary ml-2 mb-2 p-0" (click)="selectTagForFilter(true, tag.tagName)">{{tag.tagName}}</button>
   </div>
 </div>
