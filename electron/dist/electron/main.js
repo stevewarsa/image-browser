@@ -77,6 +77,10 @@ electron_1.ipcMain.on("getFiles", function (event, arg) {
     getFiles(arg, files);
     win.webContents.send("getFilesResponse", files);
 });
+electron_1.ipcMain.on("openDirectoryDialog", function () {
+    var pathSelected = openDirectoryDialog();
+    win.webContents.send("openDirectoryDialogResponse", pathSelected);
+});
 function getFiles(path, filesArrayToFill) {
     console.log("Getting files for path: " + path + "...");
     fs.readdirSync(path).forEach(function (file) {
@@ -88,6 +92,16 @@ function getFiles(path, filesArrayToFill) {
             filesArrayToFill.push(path + '/' + file);
         }
     });
+}
+function openDirectoryDialog() {
+    var options = {
+        properties: ['openDirectory']
+    };
+    //Synchronous
+    var filePath = electron_1.dialog.showOpenDialog(win, options);
+    console.log("Main.ts - file path returned from app.showOpenDialog is: ");
+    console.log(filePath);
+    return filePath;
 }
 electron_1.ipcMain.on("copyImageToClipboard", function (event, imagePath) {
     console.log("Attempting to copy image " + imagePath + " to clipboard...");

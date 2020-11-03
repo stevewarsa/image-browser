@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeImage, clipboard, shell } from "electron";
+import { app, BrowserWindow, ipcMain, nativeImage, clipboard, shell, dialog } from "electron";
 import { ExifImage } from "exif"
 import * as path from "path";
 import * as url from "url";
@@ -89,6 +89,11 @@ ipcMain.on("getFiles", (event, arg) => {
   win.webContents.send("getFilesResponse", files);
 });
 
+ipcMain.on("openDirectoryDialog", () => {
+  let pathSelected = openDirectoryDialog();
+  win.webContents.send("openDirectoryDialogResponse", pathSelected);
+});
+
 function getFiles(path: string, filesArrayToFill: string[]) {
   console.log("Getting files for path: " + path + "...");
   fs.readdirSync(path).forEach(file => {
@@ -99,6 +104,17 @@ function getFiles(path: string, filesArrayToFill: string[]) {
           filesArrayToFill.push(path + '/' + file);
       }
   });
+}
+
+function openDirectoryDialog() {
+  let options = {
+    properties: ['openDirectory']
+  }
+  //Synchronous
+  let filePath = dialog.showOpenDialog(win, options)
+  console.log("Main.ts - file path returned from app.showOpenDialog is: ");
+  console.log(filePath);
+  return filePath;
 }
 
 ipcMain.on("copyImageToClipboard", (event, imagePath) => {

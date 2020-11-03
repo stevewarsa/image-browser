@@ -81,6 +81,8 @@ export class MainComponent implements OnInit {
                 && !file.toLowerCase().endsWith(".docx")
                 && !file.toLowerCase().endsWith(".ico")
                 && !file.toLowerCase().endsWith(".wlmp")
+                && !file.toLowerCase().endsWith(".wma")
+                && !file.toLowerCase().endsWith(".dat")
                 && !file.toLowerCase().endsWith(".mov"));
         filesFound.forEach(fullFilePath => {
           let img: ImageData = allImageData[fullFilePath];
@@ -242,7 +244,7 @@ export class MainComponent implements OnInit {
         selectedTags.forEach((tag: Tag) => this.tagFlags[tag.tagName] = true);
         this.applyTags();
       }
-    })
+    });
   }
 
   clearFilters() {
@@ -362,6 +364,55 @@ export class MainComponent implements OnInit {
     this.fileService.filteredImageDataArray = this.filteredImageDataArray;
     this.fileService.imageDataArray = this.imageDataArray;
     this.route.navigate(['grid']);
+  }
+
+  getFolderPath() {
+    this.fileService.getFolderPath().then((response: string[]) => {
+      if (!response || response.length === 0) {
+        console.log("No folder selected, returning");
+        return;
+      }
+      console.log("Here is the selected folder path:");
+      console.log(response);
+      let folderPath = response[0].replace(/\\/g, "/");
+      console.log(folderPath);
+      // find all the images in this folder
+      let imagesInPath = this.imageDataArray.filter(img => folderPath === img.filePath);
+      if (!imagesInPath || imagesInPath.length === 0) {
+        console.log("No images found in the selected folder");
+        return;
+      }
+      console.log("Here are the images in the selected path:");
+      console.log(imagesInPath);
+      // Now show the tags popup for user to select which tags to apply to all the images in that folder
+      this.modalHelperService.openTagSelection(this.tags, []).result.then((selectedTags: Tag[]) => {
+        if (selectedTags && selectedTags.length > 0) {
+          let imagesToSave: ImageData[] = [];
+          for (let tag of selectedTags) {
+            let imagesWithoutTag = imagesInPath.filter(img => !img.tags.find(tg => tg.id === tag.id));
+            if (!imagesWithoutTag || imagesWithoutTag.length === 0) {
+              console.log("No images found that didn't have tag id=" + tag.id + ",name=" + tag.tagName);
+              continue;
+            }
+            console.log("Here are the images without tag id=" + tag.id + ",name=" + tag.tagName + ":");
+            console.log(imagesWithoutTag);
+            // add the current tag to the images that don't have it
+            imagesWithoutTag.forEach(img => img.tags.push(tag));
+            // add these images to list to be saved
+            imagesToSave = imagesToSave.concat(imagesWithoutTag);
+          }
+          if (!imagesToSave || imagesToSave.length === 0) {
+            console.log("No images found in the selected path which could be saved...");
+            return;
+          }
+          // now save the images (if necessary) and save the association of the tags to these images
+          console.log("Saving " + imagesToSave.length + " images with selected tag(s)...");
+          this.fileService.saveImages(imagesToSave);
+        } else {
+          console.log("No tags selected");
+        }
+      }, () => console.log("Error with tag selection popup"));
+    }, () => console.log("Error selecting folder"));
   }
 
   private updateUiAfterNavigate() {

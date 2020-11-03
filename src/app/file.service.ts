@@ -48,6 +48,15 @@ export class FileService {
     });
   }
 
+  async getFolderPath() {
+    return new Promise<string[]>((resolve, reject) => {
+      this.ipc.once("openDirectoryDialogResponse", (event, arg) => {
+        resolve(arg);
+      });
+      this.ipc.send("openDirectoryDialog");
+    });
+  }
+
   async getAllImageData() {
     return new Promise<{[fullPath:string]: ImageData}>((resolve, reject) => {
       this.ipc.once("getAllImageDataResponse", (event, results) => {
@@ -212,7 +221,7 @@ export class FileService {
       this.ipc.send("getTagId", tagName);
     });
   }
-  
+
   async getImageId(fullImagePath: string) {
     return new Promise<string>((resolve, reject) => {
       this.ipc.once("getImageIdResponse", (event, arg) => {
@@ -224,7 +233,7 @@ export class FileService {
       this.ipc.send("getImageId", fullImagePath);
     });
   }
-  
+
   async saveImage(imageMetaData: ImageData) {
     return new Promise<string>((resolve, reject) => {
       this.ipc.once("saveImageResponse", (event, arg) => {
@@ -237,7 +246,40 @@ export class FileService {
       this.ipc.send("saveImage", imageMetaData);
     });
   }
-  
+
+  saveImages(imagesToSave: ImageData[]) {
+    let query = "insert into image_data (full_path, file_name, file_path) values(?, ?, ?)";
+    for (let img of imagesToSave) {
+      // first, insert the image data if necessary
+      if (img.id === -1) {
+        let retValue = this.ipc.sendSync("runSqlStatementSync", {
+          sql: query,
+          args: [img.fullPath, img.fileName, img.filePath]
+        });
+        img.id = retValue.insertId;
+        // this image was not saved to start with, so tags can just be directly saved
+        for (let tag of img.tags) {
+          retValue = this.ipc.sendSync("runSqlStatementSync", {
+            sql: "insert into image_tag(image_id, tag_id) values (?, ?)",
+            args: [img.id, tag.id]
+          });
+        }
+      } else {
+        // now first delete, then insert the tags associated with the image
+        let retValue = this.ipc.sendSync("runSqlStatementSync", {
+          sql: "delete from image_tag where image_id = ?",
+          args: [img.id]
+        });
+        for (let tag of img.tags) {
+          retValue = this.ipc.sendSync("runSqlStatementSync", {
+            sql: "insert into image_tag(image_id, tag_id) values (?, ?)",
+            args: [img.id, tag.id]
+          });
+        }
+      }
+    }
+  }
+
   async saveTag(tagName: string) {
     return new Promise<string>((resolve, reject) => {
       this.ipc.once("saveTagResponse", (event, arg) => {
@@ -250,7 +292,7 @@ export class FileService {
       this.ipc.send("saveTag", tagName);
     });
   }
-  
+
   async saveImageTag(imageId, tagId) {
     return new Promise<string>((resolve, reject) => {
       this.ipc.once("saveImageTagResponse", (event, arg) => {

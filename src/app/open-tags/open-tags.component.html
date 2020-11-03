@@ -8,6 +8,9 @@
 <div class="modal-body">
   <div class="container">
     <div class="row mb-2">
+      <div class="col"><strong class="mr-3">New Tag:</strong> <input type="text" [(ngModel)]="newTag" placeholder="Enter New Tag Name"></div>
+    </div>
+    <div class="row mb-2">
         <label *ngFor="let tag of tags" class="checkbox-inline">
           <input class="ml-2" type="checkbox" name="{{tag.tagName}}" [checked]="tagFlags[tag.tagName]" (change)="updateTagFromUI($event.target.checked, tag.tagName)" /> {{tag.tagName}}
         </label>
