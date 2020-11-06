@@ -81,6 +81,7 @@ export class MainComponent implements OnInit {
                 && !file.toLowerCase().endsWith(".docx")
                 && !file.toLowerCase().endsWith(".ico")
                 && !file.toLowerCase().endsWith(".wlmp")
+                && !file.toLowerCase().endsWith(".mp3")
                 && !file.toLowerCase().endsWith(".wma")
                 && !file.toLowerCase().endsWith(".dat")
                 && !file.toLowerCase().endsWith(".mov"));
@@ -380,6 +381,7 @@ export class MainComponent implements OnInit {
       let imagesInPath = this.imageDataArray.filter(img => folderPath === img.filePath);
       if (!imagesInPath || imagesInPath.length === 0) {
         console.log("No images found in the selected folder");
+        this.modalHelperService.alert({message: 'No images found in ' + folderPath});
         return;
       }
       console.log("Here are the images in the selected path:");
@@ -407,7 +409,11 @@ export class MainComponent implements OnInit {
           }
           // now save the images (if necessary) and save the association of the tags to these images
           console.log("Saving " + imagesToSave.length + " images with selected tag(s)...");
+          this.busy = true;
+          this.busyMessage = "Saving " + imagesToSave.length + " images with selected tag(s)...";
           this.fileService.saveImages(imagesToSave);
+          this.busy = false;
+          this.busyMessage = null;
         } else {
           console.log("No tags selected");
         }
@@ -435,8 +441,8 @@ export class MainComponent implements OnInit {
         console.log("app.component-Received EXIF response...");
         this.currentMetaData.exifData = response;
         if (this.currentMetaData.exifData.image && this.currentMetaData.exifData.image.Make && this.currentMetaData.exifData.image.Model) {
-          let ourMakes = ['EASTMAN KODAK COMPANY', 'Research In Motion', 'HTC', 'Motorola', 'motorola', 'Motorola\u0000', 'HP', 'NIKON'];
-          let ourModels = ['KODAK DX6340 ZOOM DIGITAL CAMERA', 'BlackBerry 8330', 'PC36100', 'DROID RAZR HD', 'HTC6525LVW', 'XT1635-01', 'HP psc1600', 'BlackBerry 9310', 'COOLPIX S33'];
+          let ourMakes = ['EASTMAN KODAK COMPANY', 'Research In Motion', 'HTC', 'Motorola', 'motorola', 'Motorola\u0000', 'HP', 'NIKON', 'Apple', 'samsung'];
+          let ourModels = ['KODAK DX6340 ZOOM DIGITAL CAMERA', 'BlackBerry 8330', 'iPhone 7 Plus', 'SM-A505U', 'PC36100', 'DROID RAZR HD', 'HTC6525LVW', 'XT1635-01', 'HP psc1600', 'BlackBerry 9310', 'COOLPIX S33'];
           this.ourCamera = ourMakes.includes(this.currentMetaData.exifData.image.Make) && ourModels.includes(this.currentMetaData.exifData.image.Model);
           // check to see if our camera took the picture and there is no tag 'Pictures Taken By Steve or Tina' present
           if (this.ourCamera && this.currentMetaData.tags.filter((tag: Tag) => tag.id === 26).length < 1) {
