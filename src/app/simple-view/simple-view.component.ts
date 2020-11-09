@@ -24,6 +24,8 @@ export class SimpleViewComponent implements OnInit {
   shownTagsForFilterTags: {[tagName:string]: boolean} = {};
   filterImageFlags: {[tagName:string]: boolean} = {};
   showMoreButtons: boolean = false;
+  sending: boolean = false;
+  rotate: boolean = false;
 
   constructor(private fileService: FileService, private route: Router, private modalHelperService: ModalHelperService) { }
 
@@ -222,6 +224,7 @@ export class SimpleViewComponent implements OnInit {
 
   private updateUiAfterNavigate() {
     console.log("Entering updateUiAfterNavigate...");
+    this.rotate = false;
     this.tags.forEach(tag => {
       this.tagFlags[tag.tagName] = false;
     });
@@ -243,5 +246,19 @@ export class SimpleViewComponent implements OnInit {
     this.tags.forEach(tag => {
       this.shownTags[tag.tagName] = true;
     });
+  }
+
+  shareEmailToTina() {
+    let destEmail = 'tinawarsa@gmail.com';
+    //let destText = '6024301974@mms.att.net';
+    this.sending = true;
+    this.fileService.shareImageToEmail(this.currentMetaData, destEmail).then(response => {
+      if (response) {
+        this.modalHelperService.alert({message: "The current image has been sent via email"});
+      } else {
+        console.log("No response back from email call...");
+      }
+      this.sending = false;
+    }, () => console.log("Error in email call..."));
   }
 }

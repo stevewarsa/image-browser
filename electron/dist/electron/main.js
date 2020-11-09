@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var electron_1 = require("electron");
 var exif_1 = require("exif");
+var nodemailer = require("nodemailer");
 var path = require("path");
 var url = require("url");
 var fs = require("fs");
@@ -50,6 +51,41 @@ electron_1.ipcMain.on("getImageDetailsSync", function (event, arg) {
     catch (e) {
         console.log('Error caught: ' + e.message);
     }
+});
+electron_1.ipcMain.on("sendEmail", function (event, arg) {
+    var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: 'swarsa480@gmail.com',
+            pass: '1Tim4:1-3'
+        },
+        logger: true
+    });
+    var mailOptions = {
+        from: 'swarsa480@gmail.com',
+        to: arg.email,
+        subject: 'image',
+        text: 'Attached picture from image browser program',
+        attachments: [
+            {
+                filename: arg.img.fileName,
+                path: arg.img.fullPath
+            }
+        ]
+    };
+    console.log("Sending email with transporter: ");
+    console.log(transporter);
+    console.log("and options: ");
+    console.log(mailOptions);
+    transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+            console.log(error);
+        }
+        else {
+            console.log('Email sent: ' + info.response);
+            win.webContents.send("sendEmailResponse", "Email successfully sent");
+        }
+    });
 });
 electron_1.ipcMain.on("openImageInApp", function (event, arg) {
     electron_1.shell.openItem(arg);

@@ -5,7 +5,7 @@
 <div *ngIf="!busy && filteredImageDataArray && filteredImageDataArray.length > 0" class="container">
   <div class="row">
     <div class="col">
-      <img style="max-width: 100%; min-height: 600px; max-height: 600px;" src="file:///{{currentMetaData.fullPath}}">
+      <img [ngStyle]="{'transform': rotate ? 'rotate(-90deg)' : ''}" style="max-width: 100%; min-height: 600px; max-height: 600px;" src="file:///{{currentMetaData.fullPath}}">
     </div>
   </div>
   <div class="btn-toolbar mb-3" role="toolbar" aria-label="Navigational controls">
@@ -13,9 +13,13 @@
       <button type="button" class="btn btn-danger m-1" (click)="prev()"><i class="fa fa-arrow-circle-left"></i> Prev</button>
       <button type="button" class="btn btn-success m-1" (click)="doRandom()"><i class="fa fa-random"></i> Random</button>
       <button type="button" class="btn btn-danger m-1" (click)="next()"><i class="fa fa-arrow-circle-right"></i> Next</button>
-      <button placement="left" [ngbTooltip]="showMoreButtons ? 'Less Buttons' : 'More Buttons'" type="button" class="btn btn-secondary m-1" (click)="showMoreButtons = !showMoreButtons"><i [ngClass]="{'fa-ellipsis-v': !showMoreButtons, 'fa-chevron-left': showMoreButtons}" class="fa"></i></button>
+      <button placement="left" [ngbTooltip]="'Open Image in App'" type="button" class="btn btn-primary m-1" (click)="openImageInApp()"><i class="fa fa-folder-open-o"></i></button>
+      <button placement="left" [ngbTooltip]="'Rotate 90 Degrees Counter Clockwise'" type="button" class="btn btn-primary m-1" (click)="rotate = true"><i class="fa fa-history"></i></button>
+      <img *ngIf="sending" src="assets/ajax-loader.gif" />
+      <button *ngIf="!sending" placement="left" [ngbTooltip]="'Share Via Email To Tina'" type="button" class="btn btn-primary m-1" (click)="shareEmailToTina()"><i class="fa fa-share-alt"></i></button>
+
+      <button placement="left" [ngbTooltip]="showMoreButtons ? 'Less Buttons' : 'More Buttons'" type="button" class="btn btn-secondary m-1" (click)="showMoreButtons = !showMoreButtons"><i [ngClass]="{'fa-ellipsis-h': !showMoreButtons, 'fa-chevron-left': showMoreButtons}" class="fa"></i></button>
       <button [hidden]="!showMoreButtons" placement="left" [ngbTooltip]="'Copy Image'" type="button" class="btn btn-primary m-1" (click)="copyImageToClipboard()"><i class="fa fa-clipboard"></i></button>
-      <button [hidden]="!showMoreButtons" placement="left" [ngbTooltip]="'Open Image in App'" type="button" class="btn btn-primary m-1" (click)="openImageInApp()"><i class="fa fa-folder-open-o"></i></button>
       <button [hidden]="!showMoreButtons" placement="left" [ngbTooltip]="'Delete Image'" type="button" class="btn btn-danger m-1" (click)="deleteImage()"><i class="fa fa-trash"></i></button>
       <button [hidden]="!showMoreButtons" type="button" class="btn btn-secondary m-1" (click)="advancedView()"><i class="fa fa-adjust"></i> Advanced...</button>
     </div>

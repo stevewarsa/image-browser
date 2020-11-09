@@ -148,6 +148,15 @@ export class FileService {
     });
   }
 
+  async shareImageToEmail(image: ImageData, mail: string) {
+    return new Promise<any>((resolve, reject) => {
+      this.ipc.once("sendEmailResponse", (event, arg) => {
+        resolve(arg);
+      });
+      this.ipc.send("sendEmail", {img: image, email: mail});
+    });
+  }
+
   async getImageMetaData(imagePath: string) {
     return new Promise<ImageData>((resolve, reject) => {
       this.ipc.once("imageDataLookupResponse", (event, arg) => {
